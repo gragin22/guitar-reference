@@ -673,6 +673,20 @@ const SCALES = {
   'F':  ['F','G','A','Bb','C','D','E']
 };
 
+// Note → semitone (chromatic, 0=C)
+const SEMI = {
+  'C':0,'B#':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,
+  'E':4,'Fb':4,'E#':5,'F':5,'F#':6,'Gb':6,'G':7,
+  'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11,'Cb':11
+};
+
+// Strip awkward enharmonics like E# → F, B# → C, Cb → B for chord LIBRARY lookup
+function normalizeChord(name){
+  return name
+    .replace(/^E#/, 'F').replace(/^B#/, 'C')
+    .replace(/^Cb/, 'B').replace(/^Fb/, 'E');
+}
+
 // Modes — chord qualities, roman numerals, harmonic functions, and scale intervals per mode.
 // "qualities":  'M' = major, 'm' = minor, 'dim' = diminished
 // "intervals":  semitones from the mode's root for each scale degree
@@ -904,20 +918,6 @@ const SONGS = {
     ]
   }
 };
-
-// Note → semitone (chromatic, 0=C)
-const SEMI = {
-  'C':0,'B#':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,
-  'E':4,'Fb':4,'E#':5,'F':5,'F#':6,'Gb':6,'G':7,
-  'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11,'Cb':11
-};
-
-// Strip awkward enharmonics like E# → F, B# → C, Cb → B for chord LIBRARY lookup
-function normalizeChord(name){
-  return name
-    .replace(/^E#/, 'F').replace(/^B#/, 'C')
-    .replace(/^Cb/, 'B').replace(/^Fb/, 'E');
-}
 
 /* ===========================================================
    STATE
