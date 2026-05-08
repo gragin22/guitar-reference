@@ -10,24 +10,33 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0b0d14;
-  --panel:#11141d;
-  --panel-2:#161a26;
-  --line:#222838;
-  --line-2:#2c3349;
-  --text:#e8ebf2;
-  --muted:#7c8499;
-  --dim:#3d4458;
+  --bg:#f7f5f0;
+  --panel:#ffffff;
+  --panel-2:#f0ede5;
+  --line:#e2dfd5;
+  --line-2:#c4c0b3;
+  --text:#1d2330;
+  --muted:#6b7280;
+  --dim:#9ca3af;
 
   /* Function colors — harmonic function */
-  --tonic:#f5b942;       /* I, vi — gold */
-  --tonic-soft:#8a6526;
-  --subdom:#5aa9ff;      /* IV, ii — blue */
-  --subdom-soft:#2c5a91;
-  --dom:#ff5e5e;         /* V, iii, vii° — red */
-  --dom-soft:#8a3333;
+  --tonic:#e0a020;       /* I, vi — gold */
+  --tonic-soft:#fef3d4;
+  --subdom:#2563eb;      /* IV, ii — blue */
+  --subdom-soft:#dbeafe;
+  --dom:#dc2626;         /* V, iii, vii° — red */
+  --dom-soft:#fee2e2;
 
-  --accent:#f5b942;
+  --accent:#c2860c;
+
+  /* Inline-SVG color tokens (referenced from JS) */
+  --svg-cell-bg:#fbfaf6;
+  --svg-board-bg:#efebe0;
+  --svg-line:#cdc8b9;
+  --svg-line-strong:#1d2330;
+  --svg-string:#8a8676;
+  --svg-inlay:#d4cfbe;
+  --svg-text-on-color:#1d2330;
 }
 html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{
@@ -36,8 +45,8 @@ body{
   line-height:1.5;-webkit-font-smoothing:antialiased;
   min-height:100vh;
   background-image:
-    radial-gradient(ellipse at top, rgba(245,185,66,.04) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(90,169,255,.03) 0%, transparent 50%);
+    radial-gradient(ellipse at top, rgba(224,160,32,.06) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(37,99,235,.04) 0%, transparent 50%);
 }
 
 /* ======== TYPOGRAPHY ======== */
@@ -49,7 +58,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   border-bottom:1px solid var(--line);
   padding:1.25rem 1.5rem;
   display:flex;justify-content:space-between;align-items:center;
-  background:rgba(11,13,20,.85);backdrop-filter:blur(12px);
+  background:rgba(247,245,240,.88);backdrop-filter:blur(12px);
   position:sticky;top:0;z-index:100;
 }
 .brand{display:flex;align-items:center;gap:.7rem}
@@ -99,10 +108,10 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   cursor:pointer;transition:all .15s ease;
   min-width:46px;text-align:center;
 }
-.chip:hover{border-color:var(--line-2);background:#1d2233}
+.chip:hover{border-color:var(--line-2);background:#ebe8de}
 .chip.active{
-  background:var(--accent);color:#0b0d14;border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(245,185,66,.15);
+  background:var(--accent);color:#fff;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(194,134,12,.18);
 }
 .chip.prog{font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
 
@@ -113,7 +122,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 }
 .custom-prog input{
   width:36px;height:30px;text-align:center;
-  background:var(--bg);border:1px solid var(--line);border-radius:5px;
+  background:#fff;border:1px solid var(--line);border-radius:5px;
   color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.85rem;
   outline:none;
 }
@@ -151,7 +160,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
 .cell{cursor:pointer;transition:all .25s ease}
 .cell-bg{
-  fill:#161a26;stroke:var(--line);stroke-width:1;
+  fill:#fbfaf6;stroke:var(--line);stroke-width:1;
   transition:all .25s ease;
 }
 .cell-label{
@@ -164,40 +173,42 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 }
 .cell-degree{
   font-family:'JetBrains Mono',monospace;
-  font-size:9px;font-weight:600;
-  fill:#0b0d14;
+  font-size:9px;font-weight:700;
+  fill:#fff;
   text-anchor:middle;dominant-baseline:middle;
   pointer-events:none;
   opacity:0;
   transition:opacity .25s ease;
 }
 .cell-inner .cell-label{font-size:11px}
+.cell:hover .cell-bg{fill:#f3efe2}
 
 /* Diatonic state — soft highlight */
-.cell.diatonic .cell-bg{fill:#1c2032;stroke:var(--line-2)}
+.cell.diatonic .cell-bg{fill:#ebe6d6;stroke:var(--line-2)}
 .cell.diatonic .cell-label{fill:var(--text)}
 
 /* Function states */
-.cell.func-tonic .cell-bg{fill:var(--tonic);stroke:var(--tonic);filter:drop-shadow(0 0 12px rgba(245,185,66,.4))}
-.cell.func-tonic .cell-label{fill:#0b0d14;font-weight:700}
-.cell.func-tonic .cell-degree{opacity:1}
+.cell.func-tonic .cell-bg{fill:#f5b942;stroke:#b8860b;stroke-width:2;filter:drop-shadow(0 2px 6px rgba(184,134,11,.25))}
+.cell.func-tonic .cell-label{fill:#3a2a08;font-weight:700}
+.cell.func-tonic .cell-degree{opacity:1;fill:#3a2a08}
 
-.cell.func-subdom .cell-bg{fill:var(--subdom);stroke:var(--subdom);filter:drop-shadow(0 0 12px rgba(90,169,255,.4))}
-.cell.func-subdom .cell-label{fill:#0b0d14;font-weight:700}
-.cell.func-subdom .cell-degree{opacity:1}
+.cell.func-subdom .cell-bg{fill:#3b82f6;stroke:#1e40af;stroke-width:2;filter:drop-shadow(0 2px 6px rgba(30,64,175,.25))}
+.cell.func-subdom .cell-label{fill:#fff;font-weight:700}
+.cell.func-subdom .cell-degree{opacity:1;fill:#fff}
 
-.cell.func-dom .cell-bg{fill:var(--dom);stroke:var(--dom);filter:drop-shadow(0 0 12px rgba(255,94,94,.4))}
-.cell.func-dom .cell-label{fill:#0b0d14;font-weight:700}
-.cell.func-dom .cell-degree{opacity:1}
+.cell.func-dom .cell-bg{fill:#ef4444;stroke:#991b1b;stroke-width:2;filter:drop-shadow(0 2px 6px rgba(153,27,27,.25))}
+.cell.func-dom .cell-label{fill:#fff;font-weight:700}
+.cell.func-dom .cell-degree{opacity:1;fill:#fff}
 
 /* Inner ring (minors) gets slight desaturation */
-.cell-inner.func-tonic .cell-bg{fill:#c98f1a}
-.cell-inner.func-subdom .cell-bg{fill:#3d8ce0}
-.cell-inner.func-dom .cell-bg{fill:#d63d3d}
+.cell-inner.func-tonic .cell-bg{fill:#f7cb73}
+.cell-inner.func-subdom .cell-bg{fill:#6b9bf5}
+.cell-inner.func-dom .cell-bg{fill:#f06b6b}
 
 /* Center display */
 .center-display{
-  fill:#0b0d14;stroke:var(--line);stroke-width:1;
+  fill:#fff;stroke:var(--line);stroke-width:1;
+  filter:drop-shadow(0 1px 3px rgba(29,35,48,.06));
 }
 .center-key{
   font-family:'JetBrains Mono',monospace;
@@ -214,7 +225,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 /* Progression arc lines */
 .prog-arc{
   fill:none;stroke:var(--accent);stroke-width:1.5;
-  opacity:.35;stroke-dasharray:3 3;
+  opacity:.5;stroke-dasharray:4 3;
   pointer-events:none;
 }
 
@@ -241,14 +252,14 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .prog-step{
   display:flex;flex-direction:column;align-items:center;gap:.25rem;
   padding:.7rem .9rem;
-  background:var(--panel-2);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:10px;
   min-width:64px;
 }
-.prog-step.tonic{border-color:var(--tonic);box-shadow:inset 0 0 0 1px rgba(245,185,66,.2)}
-.prog-step.subdom{border-color:var(--subdom);box-shadow:inset 0 0 0 1px rgba(90,169,255,.2)}
-.prog-step.dom{border-color:var(--dom);box-shadow:inset 0 0 0 1px rgba(255,94,94,.2)}
+.prog-step.tonic{border-color:var(--tonic);background:var(--tonic-soft)}
+.prog-step.subdom{border-color:var(--subdom);background:var(--subdom-soft)}
+.prog-step.dom{border-color:var(--dom);background:var(--dom-soft)}
 .prog-step .deg{font-size:.65rem;color:var(--muted);font-weight:600;letter-spacing:.05em}
 .prog-step.tonic .deg{color:var(--tonic)}
 .prog-step.subdom .deg{color:var(--subdom)}
@@ -262,7 +273,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   gap:.4rem;
 }
 .diatonic-cell{
-  background:var(--panel-2);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:8px;
   padding:.7rem .3rem;
@@ -270,7 +281,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   cursor:pointer;
   transition:all .15s ease;
 }
-.diatonic-cell:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.diatonic-cell:hover{border-color:var(--line-2);transform:translateY(-1px);box-shadow:0 2px 6px rgba(29,35,48,.06)}
 .diatonic-cell .roman{
   font-family:'JetBrains Mono',monospace;
   font-size:.75rem;font-weight:600;color:var(--muted);
@@ -285,11 +296,11 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   font-size:.6rem;color:var(--muted);
   letter-spacing:.1em;text-transform:uppercase;margin-top:.15rem;
 }
-.diatonic-cell.tonic{border-color:var(--tonic);background:rgba(245,185,66,.08)}
+.diatonic-cell.tonic{border-color:var(--tonic);background:var(--tonic-soft)}
 .diatonic-cell.tonic .roman{color:var(--tonic)}
-.diatonic-cell.subdom{border-color:var(--subdom);background:rgba(90,169,255,.08)}
+.diatonic-cell.subdom{border-color:var(--subdom);background:var(--subdom-soft)}
 .diatonic-cell.subdom .roman{color:var(--subdom)}
-.diatonic-cell.dom{border-color:var(--dom);background:rgba(255,94,94,.08)}
+.diatonic-cell.dom{border-color:var(--dom);background:var(--dom-soft)}
 .diatonic-cell.dom .roman{color:var(--dom)}
 
 /* ======== CHORD DIAGRAMS ======== */
@@ -297,7 +308,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   display:flex;flex-wrap:wrap;gap:1rem;justify-content:flex-start;
 }
 .diagram-card{
-  background:var(--panel-2);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:10px;
   padding:.8rem;
@@ -333,7 +344,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .info-strip{
   display:flex;align-items:center;justify-content:space-between;
   padding:.9rem 1.25rem;
-  background:linear-gradient(90deg, rgba(245,185,66,.08), rgba(90,169,255,.04));
+  background:linear-gradient(90deg, rgba(224,160,32,.10), rgba(37,99,235,.06));
   border:1px solid var(--line);
   border-radius:12px;
   margin-bottom:1.5rem;
@@ -985,32 +996,33 @@ function buildChordSvg(shape, func){
   const isShifted = barreFret > 0;
 
   const colorMap = {
-    'tonic':'#f5b942',
-    'subdom':'#5aa9ff',
-    'dom':'#ff5e5e',
-    'default':'#e8ebf2'
+    'tonic':'#e0a020',
+    'subdom':'#2563eb',
+    'dom':'#dc2626',
+    'default':'#1d2330'
   };
   const dotColor = colorMap[func] || colorMap.default;
+  const textOnDot = func === 'tonic' ? '#3a2a08' : '#fff';
 
   let svg = `<svg class="diagram-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
 
   // Nut (only if not shifted)
   if (!isShifted) {
-    svg += `<rect x="${padX}" y="${padTop-3}" width="${W - padX*2}" height="3" fill="#e8ebf2"/>`;
+    svg += `<rect x="${padX}" y="${padTop-3}" width="${W - padX*2}" height="3" fill="#1d2330"/>`;
   } else {
     // Fret number indicator
-    svg += `<text x="${padX - 4}" y="${padTop + 13}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#7c8499">${barreFret}fr</text>`;
+    svg += `<text x="${padX - 4}" y="${padTop + 13}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#6b7280">${barreFret}fr</text>`;
   }
 
   // Frets (horizontal lines)
   for (let f = 0; f <= numFrets; f++) {
     const y = padTop + f * fretSpacing;
-    svg += `<line x1="${padX}" y1="${y}" x2="${W - padX}" y2="${y}" stroke="#3d4458" stroke-width="1"/>`;
+    svg += `<line x1="${padX}" y1="${y}" x2="${W - padX}" y2="${y}" stroke="#cdc8b9" stroke-width="1"/>`;
   }
   // Strings (vertical lines)
   for (let s = 0; s < 6; s++) {
     const x = padX + s * stringSpacing;
-    svg += `<line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + numFrets * fretSpacing}" stroke="#3d4458" stroke-width="1"/>`;
+    svg += `<line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + numFrets * fretSpacing}" stroke="#cdc8b9" stroke-width="1"/>`;
   }
 
   // Barre indicator: only draw when 3+ strings share the lowest fret (real barre)
@@ -1036,9 +1048,9 @@ function buildChordSvg(shape, func){
     const x = padX + s * stringSpacing;
     const f = frets[s];
     if (f === -1) {
-      svg += `<text x="${x}" y="${padTop - 7}" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7c8499">×</text>`;
+      svg += `<text x="${x}" y="${padTop - 7}" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#6b7280">×</text>`;
     } else if (f === 0) {
-      svg += `<circle cx="${x}" cy="${padTop - 9}" r="4" fill="none" stroke="#e8ebf2" stroke-width="1.2"/>`;
+      svg += `<circle cx="${x}" cy="${padTop - 9}" r="4" fill="none" stroke="#1d2330" stroke-width="1.2"/>`;
     } else {
       const displayFret = isShifted ? f - barreFret + 1 : f;
       if (displayFret >= 1 && displayFret <= numFrets) {
@@ -1078,8 +1090,8 @@ function renderFretboard(){
 
   let s = '';
 
-  // Background fret slots
-  s += `<rect x="${padL}" y="${padT}" width="${W - padL - padR}" height="${H - padT - padB}" fill="#161a26" stroke="#3d4458"/>`;
+  // Background fret slots — warm wood tone
+  s += `<rect x="${padL}" y="${padT}" width="${W - padL - padR}" height="${H - padT - padB}" fill="#efebe0" stroke="#c4c0b3"/>`;
 
   // Fret position dots (3, 5, 7, 9, 12)
   const inlayFrets = [3,5,7,9,12];
@@ -1087,12 +1099,12 @@ function renderFretboard(){
     if (f === 12) {
       // Double inlay
       const cx = padL + (f - 0.5) * fretW;
-      s += `<circle cx="${cx}" cy="${padT + (H - padT - padB) * 0.3}" r="4" fill="#222838"/>`;
-      s += `<circle cx="${cx}" cy="${padT + (H - padT - padB) * 0.7}" r="4" fill="#222838"/>`;
+      s += `<circle cx="${cx}" cy="${padT + (H - padT - padB) * 0.3}" r="4" fill="#d4cfbe"/>`;
+      s += `<circle cx="${cx}" cy="${padT + (H - padT - padB) * 0.7}" r="4" fill="#d4cfbe"/>`;
     } else {
       const cx = padL + (f - 0.5) * fretW;
       const cy = padT + (H - padT - padB) / 2;
-      s += `<circle cx="${cx}" cy="${cy}" r="4" fill="#222838"/>`;
+      s += `<circle cx="${cx}" cy="${cy}" r="4" fill="#d4cfbe"/>`;
     }
   });
 
@@ -1100,10 +1112,10 @@ function renderFretboard(){
   for (let f = 0; f <= fretsToShow; f++) {
     const x = padL + f * fretW;
     const w = f === 0 ? 3 : 1;
-    const color = f === 0 ? '#e8ebf2' : '#3d4458';
+    const color = f === 0 ? '#1d2330' : '#a39e8d';
     s += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${H - padB}" stroke="${color}" stroke-width="${w}"/>`;
     if (f > 0) {
-      s += `<text x="${x - fretW/2}" y="${H - 6}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7c8499">${f}</text>`;
+      s += `<text x="${x - fretW/2}" y="${H - 6}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">${f}</text>`;
     }
   }
 
@@ -1114,10 +1126,10 @@ function renderFretboard(){
     const y = padT + str * stringSpacing;
 
     // String line
-    s += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#7c8499" stroke-width="${1 + (5 - str) * 0.15}"/>`;
+    s += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#6b6757" stroke-width="${1 + (5 - str) * 0.15}"/>`;
 
     // Tuning label
-    s += `<text x="${padL - 12}" y="${y + 4}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="700" fill="#7c8499">${stringNote}</text>`;
+    s += `<text x="${padL - 12}" y="${y + 4}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="700" fill="#6b7280">${stringNote}</text>`;
 
     // Notes
     for (let f = 0; f <= fretsToShow; f++) {
@@ -1126,17 +1138,12 @@ function renderFretboard(){
         const isRoot = noteSemi === rootSemi;
         const cx = f === 0 ? padL - 6 : padL + (f - 0.5) * fretW;
         const noteName = CHROMATIC[noteSemi];
-        const color = isRoot ? '#f5b942' : '#5aa9ff';
+        const color = isRoot ? '#e0a020' : '#2563eb';
+        const txtColor = isRoot ? '#3a2a08' : '#fff';
         const r = isRoot ? 11 : 9;
 
-        if (f === 0) {
-          // Open string note — render outside the nut
-          s += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${color}" stroke="#0b0d14" stroke-width="2"/>`;
-          s += `<text x="${cx}" y="${y + 3.5}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" font-weight="700" fill="#0b0d14">${noteName}</text>`;
-        } else {
-          s += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${color}" stroke="#0b0d14" stroke-width="2"/>`;
-          s += `<text x="${cx}" y="${y + 3.5}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" font-weight="700" fill="#0b0d14">${noteName}</text>`;
-        }
+        s += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+        s += `<text x="${cx}" y="${y + 3.5}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" font-weight="700" fill="${txtColor}">${noteName}</text>`;
       }
     }
   }
