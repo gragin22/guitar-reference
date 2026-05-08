@@ -281,10 +281,16 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .cell.func-dom .cell-label{fill:#fff;font-weight:700}
 .cell.func-dom .cell-degree{opacity:1;fill:#fff}
 
+/* Borrowed chord — outside the current mode but used in the song */
+.cell.func-borrowed .cell-bg{fill:#9ca3af;stroke:#4b5563;stroke-width:2;stroke-dasharray:3 2;filter:drop-shadow(0 2px 6px rgba(75,85,99,.18))}
+.cell.func-borrowed .cell-label{fill:#1d2330;font-weight:700}
+.cell.func-borrowed .cell-degree{opacity:1;fill:#1d2330}
+
 /* Inner ring (minors) gets slight desaturation */
 .cell-inner.func-tonic .cell-bg{fill:#f7cb73}
 .cell-inner.func-subdom .cell-bg{fill:#6b9bf5}
 .cell-inner.func-dom .cell-bg{fill:#f06b6b}
+.cell-inner.func-borrowed .cell-bg{fill:#b8bdc7}
 
 /* Center display */
 .center-display{
@@ -341,6 +347,8 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .prog-step.tonic{border-color:var(--tonic);background:var(--tonic-soft)}
 .prog-step.subdom{border-color:var(--subdom);background:var(--subdom-soft)}
 .prog-step.dom{border-color:var(--dom);background:var(--dom-soft)}
+.prog-step.borrowed{border-color:var(--dim);background:#f3f4f6;border-style:dashed}
+.prog-step.borrowed .deg{color:var(--muted)}
 .prog-step .deg{font-size:.65rem;color:var(--muted);font-weight:600;letter-spacing:.05em}
 .prog-step.tonic .deg{color:var(--tonic)}
 .prog-step.subdom .deg{color:var(--subdom)}
@@ -404,6 +412,8 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .diagram-card.tonic .deg-label{color:var(--tonic)}
 .diagram-card.subdom .deg-label{color:var(--subdom)}
 .diagram-card.dom .deg-label{color:var(--dom)}
+.diagram-card.borrowed{border-style:dashed;border-color:var(--dim)}
+.diagram-card.borrowed .deg-label{color:var(--muted)}
 .diagram-card .name-label{
   font-family:'JetBrains Mono',monospace;
   font-size:1rem;font-weight:700;
@@ -479,8 +489,20 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .footer-note{
   margin-top:3rem;text-align:center;
   font-size:.75rem;color:var(--muted);letter-spacing:.05em;
+  display:flex;flex-direction:column;gap:.6rem;align-items:center;
 }
 .footer-note .accent{color:var(--accent)}
+.footer-theory{
+  max-width:640px;line-height:1.6;letter-spacing:0;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:.7rem 1rem;
+}
+.footer-borrowed-chip{
+  display:inline-block;
+  border:1px dashed var(--dim);border-radius:4px;
+  padding:0 .35rem;color:var(--text);
+  background:#f3f4f6;
+}
 </style>
 </head>
 <body>
@@ -619,7 +641,10 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   </div>
 
   <div class="footer-note">
-    <span class="accent">I ii iii IV V vi vii°</span> &nbsp;·&nbsp; Major minor minor Major Major minor diminished
+    <div><span class="accent">I ii iii IV V vi vii°</span> &nbsp;·&nbsp; Major minor minor Major Major minor diminished</div>
+    <div class="footer-theory">
+      Some songs use a chord that sits outside the chosen mode — a "borrowed chord" (e.g. a major V in a minor-key song). It's a normal pop/rock practice, not a mistake. Borrowed chords show with a <span class="footer-borrowed-chip">dashed outline</span> and no Roman numeral. The chord name is what to play.
+    </div>
   </div>
 
 </div>
@@ -872,8 +897,10 @@ const SONGS = {
     title: "Say It Ain't So",
     artist: 'Weezer',
     sections: [
-      { name: 'Verse',  key: 'D', mode: 'natural-minor', progression: [1,5,6,3] },
-      { name: 'Chorus', key: 'D', mode: 'natural-minor', progression: [6,3,7,1] }
+      // Original recording is in C minor. Uses a major V (G) which is borrowed from harmonic minor.
+      { name: 'Intro Riff', key: 'C', mode: 'natural-minor', chords: ['Cm','Ab','Eb','Bb'] },
+      { name: 'Verse',      key: 'C', mode: 'natural-minor', chords: ['Cm','G','Cm','Ab','Eb','Bb'] },
+      { name: 'Chorus',     key: 'C', mode: 'natural-minor', chords: ['F','Cm','Bb','Ab','Eb','G'] }
     ]
   }
 };
@@ -926,6 +953,82 @@ function diatonicChords(key, modeKey){
       func: mode.funcs[i]
     };
   });
+}
+
+// Normalize note for enharmonic comparison (Bb === A#, E# === F, etc.)
+function noteSemi(n) {
+  return SEMI[(n || '').replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+}
+function notesEqual(a, b) { return noteSemi(a) === noteSemi(b); }
+
+// Pull just the root of a chord name (e.g. "G7" → "G", "F#m7b5" → "F#")
+function chordRoot(name) {
+  const m = (name || '').match(/^([A-G][#b]?)/);
+  return m ? m[1] : name;
+}
+
+// Determine quality from the suffix portion of a chord name
+function chordQuality(suffix) {
+  const s = (suffix || '').toLowerCase();
+  if (/^m(?!aj)/.test(s)) return 'minor';
+  if (/^dim|^°|^o(?![ru])/.test(s)) return 'dim';
+  if (/^aug|^\+/.test(s)) return 'aug';
+  return 'major';
+}
+
+// Resolve a literal chord name in context of (key, mode).
+// If the chord is diatonic to the mode, inherit its roman/func.
+// Otherwise mark it as `borrowed` — still renders, just neutral coloring.
+function resolveChord(chordName, key, modeKey) {
+  modeKey = modeKey || 'major';
+  const root = chordRoot(chordName);
+  const suffix = chordName.slice(root.length);
+  const quality = chordQuality(suffix);
+
+  const dia = diatonicChords(key, modeKey);
+  for (const c of dia) {
+    if (notesEqual(c.note, root) && c.quality === quality) {
+      return {
+        degree: c.degree,
+        roman: c.roman,
+        name: chordName,
+        note: root,
+        quality: quality,
+        func: c.func
+      };
+    }
+  }
+  // Borrowed chord — outside the current mode
+  return {
+    degree: null,
+    roman: '',
+    name: chordName,
+    note: root,
+    quality: quality,
+    func: 'borrowed'
+  };
+}
+
+// Single source of truth for the currently-active chord list.
+// Handles both literal `chords:` arrays and degree-based `progression:` arrays.
+function getActiveChords() {
+  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
+    const song = SONGS[state.songId];
+    const section = song.sections[state.activeSection] || song.sections[0];
+    if (!section) return [];
+    const sectionMode = section.mode || 'major';
+    if (section.chords && section.chords.length) {
+      return section.chords.map(name => resolveChord(name, section.key, sectionMode));
+    }
+    if (section.progression && section.progression.length) {
+      const dia = diatonicChords(section.key, sectionMode);
+      return section.progression.map(d => dia[d-1]).filter(Boolean);
+    }
+    return [];
+  }
+  // Custom mode
+  const dia = diatonicChords(state.key, state.modalKey);
+  return state.progression.map(d => dia[d-1]).filter(Boolean);
 }
 
 function progChords(key, prog){
@@ -998,10 +1101,10 @@ function getChordShape(chordName, qualityKey){
   const norm = normalizeChord(chordName);
   if (CHORD_LIB[norm]) return Object.assign({barreFret:0}, CHORD_LIB[norm]);
 
-  // Strip suffix to get root
-  let root = norm;
-  if (qualityKey === 'minor') root = norm.replace(/m$/,'');
-  if (qualityKey === 'dim')   root = norm.replace(/dim$/,'');
+  // Reduce to the underlying triad name (strip 7, sus, add9, etc.)
+  const root = chordRoot(norm);
+  const baseTriad = qualityKey === 'minor' ? root + 'm' : root;
+  if (CHORD_LIB[baseTriad]) return Object.assign({barreFret:0}, CHORD_LIB[baseTriad]);
 
   const barre = buildBarre(root, qualityKey);
   if (barre) return barre;
@@ -1163,33 +1266,45 @@ function relativeMinor(majorKey){
 
 function applyCircleState(){
   const dia = diatonicChords(state.key, state.modalKey);
-  const placements = dia.map(c => circlePlacement(c));
+  const diaPlacements = dia.map(c => circlePlacement(c));
+  const activeChords = getActiveChords();
 
   // Clear all
   document.querySelectorAll('.cell').forEach(g => {
-    g.classList.remove('diatonic','func-tonic','func-subdom','func-dom');
+    g.classList.remove('diatonic','func-tonic','func-subdom','func-dom','func-borrowed');
     const deg = g.querySelector('.cell-degree');
     if (deg) deg.textContent = '';
   });
 
-  // Determine progression set (which degrees are active)
-  const progSet = new Set(state.progression);
-  const showAllDiatonic = progSet.size === 0;
+  // Build a signature of which cells are active (for context-dimming)
+  const activeSigs = new Set();
+  const activePlacements = activeChords.map(c => {
+    const p = circlePlacement(c);
+    if (p) activeSigs.add(`${p.ring}-${p.pos}`);
+    return p;
+  });
 
-  placements.forEach((place, i) => {
+  // Soft-highlight diatonic chords NOT in the active set, for context
+  if (activeSigs.size > 0) {
+    diaPlacements.forEach(place => {
+      if (!place) return;
+      const sig = `${place.ring}-${place.pos}`;
+      if (!activeSigs.has(sig)) {
+        const cell = findCell(place);
+        if (cell) cell.classList.add('diatonic');
+      }
+    });
+  }
+
+  // Highlight active chords with their function color + roman label
+  activeChords.forEach((c, i) => {
+    const place = activePlacements[i];
     if (!place) return;
-    const degree = i + 1;
-    const isInProg = progSet.has(degree);
-    if (!isInProg && !showAllDiatonic) {
-      const cell = findCell(place);
-      if (cell) cell.classList.add('diatonic');
-      return;
-    }
     const cell = findCell(place);
     if (!cell) return;
-    cell.classList.add('func-' + dia[i].func);
+    cell.classList.add('func-' + (c.func || 'tonic'));
     const deg = cell.querySelector('.cell-degree');
-    if (deg) deg.textContent = dia[i].roman;
+    if (deg) deg.textContent = c.roman || '';
   });
 
   // Update center display — show key + mode label
@@ -1198,7 +1313,7 @@ function applyCircleState(){
   const cs = document.getElementById('centerSub');
   if (cs) cs.textContent = (MODES[state.modalKey] || MODES.major).label.toLowerCase();
 
-  drawProgArcs(placements);
+  drawProgArcs(activePlacements);
 }
 
 // Map a chord to its (ring, position-index) on the circle by its root note.
@@ -1232,7 +1347,7 @@ function drawProgArcs(placements){
   const arcLayer = document.getElementById('arcLayer');
   if (!arcLayer) return;
   arcLayer.innerHTML = '';
-  if (state.progression.length < 2) return;
+  if (!placements || placements.length < 2) return;
 
   const ns = 'http://www.w3.org/2000/svg';
   const cx = 250, cy = 250;
@@ -1246,11 +1361,9 @@ function drawProgArcs(placements){
     return {x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang)};
   }
 
-  for (let i = 0; i < state.progression.length; i++) {
-    const dFrom = state.progression[i];
-    const dTo   = state.progression[(i + 1) % state.progression.length];
-    const pFrom = placements[dFrom - 1];
-    const pTo   = placements[dTo - 1];
+  for (let i = 0; i < placements.length; i++) {
+    const pFrom = placements[i];
+    const pTo   = placements[(i + 1) % placements.length];
     const a = getXY(pFrom);
     const b = getXY(pTo);
     if (!a || !b) continue;
@@ -1271,30 +1384,36 @@ function drawProgArcs(placements){
 function renderInfoStrip(){
   const modeLabel = (MODES[state.modalKey] || MODES.major).label.toLowerCase();
   document.getElementById('infoKey').textContent = `${state.key} ${modeLabel}`;
-  document.getElementById('infoProg').textContent =
-    state.progression.length ? state.progression.join('–') : '—';
+  let progText = '—';
+  if (state.progression && state.progression.length) {
+    progText = state.progression.join('–');
+  } else {
+    // Literal-chord case (or empty) — show chord names if any
+    const chords = getActiveChords();
+    if (chords.length) progText = chords.map(c => c.name).join(' – ');
+  }
+  document.getElementById('infoProg').textContent = progText;
   document.getElementById('infoScale').textContent = buildScaleNotes(state.key, state.modalKey).join(' ');
 }
 
 function renderProgDisplay(){
   const wrap = document.getElementById('progDisplay');
   wrap.innerHTML = '';
-  if (state.progression.length === 0) {
+  const chords = getActiveChords();
+  if (chords.length === 0) {
     wrap.innerHTML = '<span style="color:var(--muted);font-size:.85rem">Pick a progression above to see chord names</span>';
     return;
   }
-  const dia = diatonicChords(state.key, state.modalKey);
-  state.progression.forEach((d, idx) => {
-    const c = dia[d-1];
+  chords.forEach((c, idx) => {
     if (!c) return;
     const step = document.createElement('div');
-    step.className = 'prog-step ' + c.func;
+    step.className = 'prog-step ' + (c.func || 'tonic');
     step.innerHTML = `
-      <div class="deg">${c.roman}</div>
+      <div class="deg">${c.roman || '·'}</div>
       <div class="chord">${c.name}</div>
     `;
     wrap.appendChild(step);
-    if (idx < state.progression.length - 1) {
+    if (idx < chords.length - 1) {
       const a = document.createElement('span');
       a.className = 'prog-arrow';
       a.textContent = '→';
@@ -1326,19 +1445,27 @@ function renderDiatonicGrid(){
 function renderDiagrams(){
   const row = document.getElementById('diagramsRow');
   row.innerHTML = '';
-  const dia = diatonicChords(state.key, state.modalKey);
-  const chords = state.progression.length
-    ? state.progression.map(d => dia[d-1])
-    : dia;
+  let chords = getActiveChords();
+  // If nothing active (no progression in custom mode), fall back to showing the diatonic set
+  if (chords.length === 0) chords = diatonicChords(state.key, state.modalKey);
+
+  // Deduplicate by chord name so the same chord doesn't repeat in long progressions
+  const seen = new Set();
+  chords = chords.filter(c => {
+    if (!c || seen.has(c.name)) return false;
+    seen.add(c.name);
+    return true;
+  });
 
   chords.forEach(c => {
     if (!c) return;
     const card = document.createElement('div');
-    card.className = 'diagram-card ' + c.func;
-    const shape = getChordShape(c.name, c.quality === 'major' ? 'major' : c.quality === 'minor' ? 'minor' : 'dim');
+    card.className = 'diagram-card ' + (c.func || 'tonic');
+    const qKey = c.quality === 'minor' ? 'minor' : c.quality === 'dim' ? 'dim' : 'major';
+    const shape = getChordShape(c.name, qKey);
 
     card.innerHTML = `
-      <div class="deg-label">${c.roman}</div>
+      <div class="deg-label">${c.roman || '·'}</div>
       <div class="name-label">${c.name}</div>
       ${shape ? buildChordSvg(shape, c.func) : '<div style="font-size:.7rem;color:var(--muted)">—</div>'}
     `;
@@ -1363,6 +1490,7 @@ function buildChordSvg(shape, func){
     'tonic':'#e0a020',
     'subdom':'#2563eb',
     'dom':'#dc2626',
+    'borrowed':'#6b7280',
     'default':'#1d2330'
   };
   const dotColor = colorMap[func] || colorMap.default;
@@ -1632,7 +1760,7 @@ function render(){
     const section = song.sections[state.activeSection] || song.sections[0];
     if (section) {
       state.key = section.key;
-      state.progression = section.progression;
+      state.progression = section.progression || [];
       state.modalKey = section.mode || 'major';
       // Auto-sync the fretboard scale chip to match the song's mode where it makes sense
       if (state.modalKey === 'natural-minor') state.scaleType = 'natural-minor';
@@ -1717,23 +1845,30 @@ function renderSongSections(){
   const song = SONGS[state.songId];
   song.sections.forEach((section, idx) => {
     const sectionMode = section.mode || 'major';
-    const dia = diatonicChords(section.key, sectionMode);
     const modeLabel = (MODES[sectionMode] || MODES.major).label;
     const card = document.createElement('div');
     card.className = 'section-card' + (idx === state.activeSection ? ' active' : '');
     card.addEventListener('click', () => setActiveSection(idx));
 
+    // Build the section's chord list (literal chords or derived from progression)
+    let sectionChords;
+    if (section.chords && section.chords.length) {
+      sectionChords = section.chords.map(name => resolveChord(name, section.key, sectionMode));
+    } else {
+      const dia = diatonicChords(section.key, sectionMode);
+      sectionChords = (section.progression || []).map(d => dia[d-1]).filter(Boolean);
+    }
+
     let chordsHtml = '<div class="prog-display">';
-    section.progression.forEach((deg, i) => {
-      const c = dia[deg - 1];
+    sectionChords.forEach((c, i) => {
       if (!c) return;
       chordsHtml += `
-        <div class="prog-step ${c.func}">
-          <div class="deg">${c.roman}</div>
+        <div class="prog-step ${c.func || 'tonic'}">
+          <div class="deg">${c.roman || '·'}</div>
           <div class="chord">${c.name}</div>
         </div>
       `;
-      if (i < section.progression.length - 1) {
+      if (i < sectionChords.length - 1) {
         chordsHtml += `<span class="prog-arrow">→</span>`;
       }
     });
