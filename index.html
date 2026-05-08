@@ -81,6 +81,87 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 /* ======== CONTAINER ======== */
 .container{max-width:1280px;margin:0 auto;padding:2rem 1.5rem 4rem}
 
+/* ======== MODE BAR ======== */
+.mode-bar{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+.mode-toggle{
+  display:inline-flex;background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;padding:4px;
+  box-shadow:0 1px 2px rgba(29,35,48,.04);
+}
+.mode-btn{
+  font:inherit;padding:.55rem 1.1rem;border:none;background:transparent;
+  color:var(--muted);cursor:pointer;border-radius:7px;
+  font-size:.85rem;font-weight:500;transition:all .15s ease;
+  letter-spacing:.01em;
+}
+.mode-btn:hover{color:var(--text)}
+.mode-btn.active{
+  background:var(--accent);color:#fff;
+  box-shadow:0 1px 3px rgba(194,134,12,.3);
+}
+.song-select{
+  padding:.6rem .9rem;background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;
+  font-size:.9rem;font-family:inherit;color:var(--text);
+  min-width:240px;cursor:pointer;outline:none;
+  transition:border-color .15s ease;
+}
+.song-select:hover{border-color:var(--line-2)}
+.song-select:focus{border-color:var(--accent)}
+.song-info{
+  display:flex;flex-direction:column;
+  padding:.4rem .9rem;border-left:2px solid var(--accent);
+}
+.song-info-title{
+  font-size:1rem;font-weight:600;color:var(--text);
+  letter-spacing:-.005em;
+}
+.song-info-artist{
+  font-size:.75rem;color:var(--muted);
+  letter-spacing:.05em;margin-top:.1rem;
+}
+
+/* ======== SECTION CARDS (song mode) ======== */
+.section-card{
+  background:#fff;border:1px solid var(--line);border-radius:12px;
+  padding:1rem;margin-bottom:.7rem;cursor:pointer;
+  transition:all .15s ease;
+}
+.section-card:hover{border-color:var(--line-2);transform:translateY(-1px);box-shadow:0 2px 6px rgba(29,35,48,.06)}
+.section-card.active{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(194,134,12,.18),0 2px 8px rgba(29,35,48,.08);
+}
+.section-card-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:.7rem;padding-bottom:.5rem;
+  border-bottom:1px dashed var(--line);
+}
+.section-card-name{
+  font-size:.7rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--text);
+}
+.section-card.active .section-card-name{color:var(--accent)}
+.section-card-key{
+  font-size:.7rem;color:var(--muted);letter-spacing:.05em;
+}
+.section-card-key .key-name{
+  font-family:'JetBrains Mono',monospace;
+  color:var(--accent);font-weight:700;
+}
+.section-card .prog-display{
+  gap:.4rem;
+}
+.section-card .prog-step{
+  padding:.5rem .65rem;min-width:54px;
+}
+.section-card .prog-step .chord{font-size:.95rem}
+.section-card .prog-step .deg{font-size:.6rem}
+.section-card .prog-arrow{font-size:.85rem}
+
 /* ======== CONTROLS ======== */
 .controls{
   background:var(--panel);
@@ -421,8 +502,23 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
 <div class="container">
 
-  <!-- CONTROLS -->
-  <div class="controls">
+  <!-- MODE BAR -->
+  <div class="mode-bar">
+    <div class="mode-toggle" role="tablist">
+      <button class="mode-btn" data-mode="song" role="tab">Select a Song</button>
+      <button class="mode-btn active" data-mode="custom" role="tab">Custom</button>
+    </div>
+    <select class="song-select" id="songSelect" style="display:none">
+      <option value="">— Pick a song —</option>
+    </select>
+    <div class="song-info" id="songInfo" style="display:none">
+      <span class="song-info-title" id="songInfoTitle"></span>
+      <span class="song-info-artist" id="songInfoArtist"></span>
+    </div>
+  </div>
+
+  <!-- CONTROLS (custom mode only) -->
+  <div class="controls" id="controlsPanel">
     <div class="control-group">
       <div class="control-label">Key</div>
       <div class="chip-row" id="keyChips"></div>
@@ -480,9 +576,16 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
     <!-- RIGHT: Progression + Diatonic -->
     <div class="side-col">
-      <div class="panel">
+      <!-- Custom mode: single progression -->
+      <div class="panel" id="progPanel">
         <div class="panel-title">Progression in Key</div>
         <div class="prog-display" id="progDisplay"></div>
+      </div>
+
+      <!-- Song mode: multiple sections -->
+      <div class="panel" id="sectionsPanel" style="display:none">
+        <div class="panel-title">Song Sections</div>
+        <div id="sectionsList"></div>
       </div>
 
       <div class="panel">
@@ -562,6 +665,62 @@ function chromaticForKey(key){
   return FLAT_KEYS.includes(key) ? CHROMATIC_FLAT : CHROMATIC_SHARP;
 }
 
+/* ===========================================================
+   SONGS DATABASE
+   Each song has 1+ sections. Each section: { name, key, progression }
+   - key: a major key (one of CIRCLE_ORDER)
+   - progression: array of scale degrees (1..7)
+   Add songs over time by appending to this object.
+   =========================================================== */
+const SONGS = {
+  'let-it-be': {
+    title: 'Let It Be',
+    artist: 'The Beatles',
+    sections: [
+      { name: 'Verse',  key: 'C', progression: [1,5,6,4,1,5,4,1] },
+      { name: 'Chorus', key: 'C', progression: [6,5,4,1,1,5,4,1] }
+    ]
+  },
+  'with-or-without-you': {
+    title: 'With Or Without You',
+    artist: 'U2',
+    sections: [
+      { name: 'Whole Song', key: 'D', progression: [1,5,6,4] }
+    ]
+  },
+  'stand-by-me': {
+    title: 'Stand By Me',
+    artist: 'Ben E. King',
+    sections: [
+      { name: 'Whole Song', key: 'A', progression: [1,6,4,5] }
+    ]
+  },
+  'sweet-home-alabama': {
+    title: 'Sweet Home Alabama',
+    artist: 'Lynyrd Skynyrd',
+    sections: [
+      { name: 'Whole Song', key: 'G', progression: [5,4,1] }
+    ]
+  },
+  'no-woman-no-cry': {
+    title: 'No Woman No Cry',
+    artist: 'Bob Marley',
+    sections: [
+      { name: 'Verse',  key: 'C', progression: [1,5,6,4,1,4,1,5] },
+      { name: 'Chorus', key: 'C', progression: [1,5,6,4,1,4,1,5] }
+    ]
+  },
+  'dont-stop-believin': {
+    title: "Don't Stop Believin'",
+    artist: 'Journey',
+    sections: [
+      { name: 'Verse',      key: 'E', progression: [1,5,6,4] },
+      { name: 'Pre-Chorus', key: 'E', progression: [1,5,3,4] },
+      { name: 'Chorus',     key: 'E', progression: [4,1,5,6,4,1,5] }
+    ]
+  }
+};
+
 // Note → semitone (chromatic, 0=C)
 const SEMI = {
   'C':0,'B#':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,
@@ -581,6 +740,9 @@ function normalizeChord(name){
    =========================================================== */
 
 let state = {
+  mode: 'custom',          // 'custom' | 'song'
+  songId: null,            // selected song ID when mode === 'song'
+  activeSection: 0,        // which section of the song is currently driving the visualizations
   key: 'C',
   progression: [1,5,6,4],
   scaleType: 'major'
@@ -1287,13 +1449,144 @@ function syncChipStates(){
    =========================================================== */
 
 function render(){
+  // In song mode, mirror the active section's key + progression into state
+  // so all the existing render functions work transparently.
+  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
+    const song = SONGS[state.songId];
+    const section = song.sections[state.activeSection] || song.sections[0];
+    if (section) {
+      state.key = section.key;
+      state.progression = section.progression;
+    }
+  }
+
   applyCircleState();
   renderInfoStrip();
   renderProgDisplay();
   renderDiatonicGrid();
   renderDiagrams();
   renderFretboard();
+  renderSongSections();
   syncChipStates();
+  syncModeUI();
+}
+
+/* ===========================================================
+   SONG MODE — UI logic
+   =========================================================== */
+
+function buildSongDropdown(){
+  const sel = document.getElementById('songSelect');
+  // Wipe and rebuild so adding songs to SONGS auto-populates
+  sel.innerHTML = '<option value="">— Pick a song —</option>';
+  Object.keys(SONGS).forEach(id => {
+    const s = SONGS[id];
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = `${s.title} — ${s.artist}`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', e => {
+    const id = e.target.value;
+    if (id && SONGS[id]) {
+      state.songId = id;
+      state.activeSection = 0;
+      render();
+    } else {
+      state.songId = null;
+      render();
+    }
+  });
+}
+
+function bindModeToggle(){
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      state.mode = mode;
+      if (mode === 'custom') {
+        state.songId = null;
+        document.getElementById('songSelect').value = '';
+      }
+      render();
+    });
+  });
+}
+
+function setActiveSection(idx){
+  state.activeSection = idx;
+  render();
+}
+
+function renderSongSections(){
+  const list = document.getElementById('sectionsList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (state.mode !== 'song' || !state.songId || !SONGS[state.songId]) return;
+
+  const song = SONGS[state.songId];
+  song.sections.forEach((section, idx) => {
+    const dia = diatonicChords(section.key);
+    const card = document.createElement('div');
+    card.className = 'section-card' + (idx === state.activeSection ? ' active' : '');
+    card.addEventListener('click', () => setActiveSection(idx));
+
+    let chordsHtml = '<div class="prog-display">';
+    section.progression.forEach((deg, i) => {
+      const c = dia[deg - 1];
+      if (!c) return;
+      chordsHtml += `
+        <div class="prog-step ${c.func}">
+          <div class="deg">${c.roman}</div>
+          <div class="chord">${c.name}</div>
+        </div>
+      `;
+      if (i < section.progression.length - 1) {
+        chordsHtml += `<span class="prog-arrow">→</span>`;
+      }
+    });
+    chordsHtml += '</div>';
+
+    card.innerHTML = `
+      <div class="section-card-head">
+        <div class="section-card-name">${section.name}</div>
+        <div class="section-card-key">Key of <span class="key-name">${section.key}</span></div>
+      </div>
+      ${chordsHtml}
+    `;
+    list.appendChild(card);
+  });
+}
+
+function syncModeUI(){
+  const isSong = state.mode === 'song';
+  const songLoaded = isSong && state.songId && SONGS[state.songId];
+
+  // Mode buttons
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === state.mode);
+  });
+
+  // Song dropdown visible only in song mode
+  document.getElementById('songSelect').style.display = isSong ? '' : 'none';
+
+  // Song info card shown when a song is loaded
+  const songInfo = document.getElementById('songInfo');
+  if (songLoaded) {
+    const song = SONGS[state.songId];
+    songInfo.style.display = '';
+    document.getElementById('songInfoTitle').textContent = song.title;
+    document.getElementById('songInfoArtist').textContent = song.artist;
+  } else {
+    songInfo.style.display = 'none';
+  }
+
+  // Custom controls: hidden when a song is loaded; visible in custom mode OR in song mode before a song is picked
+  document.getElementById('controlsPanel').style.display = songLoaded ? 'none' : '';
+
+  // Progression panel (custom) vs Sections panel (song)
+  document.getElementById('progPanel').style.display = songLoaded ? 'none' : '';
+  document.getElementById('sectionsPanel').style.display = songLoaded ? '' : 'none';
 }
 
 function init(){
@@ -1301,6 +1594,8 @@ function init(){
   buildScaleChips();
   bindProgChips();
   buildCircle();
+  buildSongDropdown();
+  bindModeToggle();
   render();
 }
 
