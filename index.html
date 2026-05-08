@@ -673,6 +673,7 @@ function chromaticForKey(key){
    Add songs over time by appending to this object.
    =========================================================== */
 const SONGS = {
+  // Alphabetical by artist (ignoring "The")
   'let-it-be': {
     title: 'Let It Be',
     artist: 'The Beatles',
@@ -681,25 +682,11 @@ const SONGS = {
       { name: 'Chorus', key: 'C', progression: [6,5,4,1,1,5,4,1] }
     ]
   },
-  'with-or-without-you': {
-    title: 'With Or Without You',
-    artist: 'U2',
-    sections: [
-      { name: 'Whole Song', key: 'D', progression: [1,5,6,4] }
-    ]
-  },
   'stand-by-me': {
     title: 'Stand By Me',
     artist: 'Ben E. King',
     sections: [
       { name: 'Whole Song', key: 'A', progression: [1,6,4,5] }
-    ]
-  },
-  'sweet-home-alabama': {
-    title: 'Sweet Home Alabama',
-    artist: 'Lynyrd Skynyrd',
-    sections: [
-      { name: 'Whole Song', key: 'G', progression: [5,4,1] }
     ]
   },
   'no-woman-no-cry': {
@@ -710,6 +697,21 @@ const SONGS = {
       { name: 'Chorus', key: 'C', progression: [1,5,6,4,1,4,1,5] }
     ]
   },
+  'just-like-heaven': {
+    title: 'Just Like Heaven',
+    artist: 'The Cure',
+    sections: [
+      { name: 'Whole Song', key: 'A', progression: [1,4,6,5] }
+    ]
+  },
+  'private-eyes': {
+    title: 'Private Eyes',
+    artist: 'Daryl Hall & John Oates',
+    sections: [
+      { name: 'Verse',  key: 'E', progression: [1,4,1,4] },
+      { name: 'Chorus', key: 'E', progression: [1,4,5,4] }
+    ]
+  },
   'dont-stop-believin': {
     title: "Don't Stop Believin'",
     artist: 'Journey',
@@ -717,6 +719,35 @@ const SONGS = {
       { name: 'Verse',      key: 'E', progression: [1,5,6,4] },
       { name: 'Pre-Chorus', key: 'E', progression: [1,5,3,4] },
       { name: 'Chorus',     key: 'E', progression: [4,1,5,6,4,1,5] }
+    ]
+  },
+  'sweet-home-alabama': {
+    title: 'Sweet Home Alabama',
+    artist: 'Lynyrd Skynyrd',
+    sections: [
+      { name: 'Whole Song', key: 'G', progression: [5,4,1] }
+    ]
+  },
+  'everybody-wants-to-rule-the-world': {
+    title: 'Everybody Wants To Rule The World',
+    artist: 'Tears For Fears',
+    sections: [
+      { name: 'Verse',  key: 'D', progression: [1,2] },
+      { name: 'Chorus', key: 'D', progression: [4,1,5] }
+    ]
+  },
+  'with-or-without-you': {
+    title: 'With Or Without You',
+    artist: 'U2',
+    sections: [
+      { name: 'Whole Song', key: 'D', progression: [1,5,6,4] }
+    ]
+  },
+  'sweet-jane': {
+    title: 'Sweet Jane',
+    artist: 'The Velvet Underground',
+    sections: [
+      { name: 'Whole Song', key: 'D', progression: [1,5,4,1,5] }
     ]
   }
 };
@@ -1479,11 +1510,17 @@ function buildSongDropdown(){
   const sel = document.getElementById('songSelect');
   // Wipe and rebuild so adding songs to SONGS auto-populates
   sel.innerHTML = '<option value="">— Pick a song —</option>';
-  Object.keys(SONGS).forEach(id => {
+  const sortKey = name => (name || '').replace(/^The\s+/i, '').toLowerCase();
+  const ids = Object.keys(SONGS).sort((a, b) => {
+    const ka = sortKey(SONGS[a].artist), kb = sortKey(SONGS[b].artist);
+    if (ka !== kb) return ka.localeCompare(kb);
+    return SONGS[a].title.localeCompare(SONGS[b].title);
+  });
+  ids.forEach(id => {
     const s = SONGS[id];
     const opt = document.createElement('option');
     opt.value = id;
-    opt.textContent = `${s.title} — ${s.artist}`;
+    opt.textContent = `${s.artist} — ${s.title}`;
     sel.appendChild(opt);
   });
   sel.addEventListener('change', e => {
