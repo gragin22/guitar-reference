@@ -1445,11 +1445,29 @@ function renderDiatonicGrid(){
 function renderDiagrams(){
   const row = document.getElementById('diagramsRow');
   row.innerHTML = '';
-  let chords = getActiveChords();
-  // If nothing active (no progression in custom mode), fall back to showing the diatonic set
-  if (chords.length === 0) chords = diatonicChords(state.key, state.modalKey);
 
-  // Deduplicate by chord name so the same chord doesn't repeat in long progressions
+  let chords;
+  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
+    // Song mode: show every chord across every section so the user has all the
+    // shapes they need to play the whole song
+    const song = SONGS[state.songId];
+    chords = [];
+    song.sections.forEach(section => {
+      const sectionMode = section.mode || 'major';
+      if (section.chords && section.chords.length) {
+        section.chords.forEach(name => chords.push(resolveChord(name, section.key, sectionMode)));
+      } else if (section.progression && section.progression.length) {
+        const dia = diatonicChords(section.key, sectionMode);
+        section.progression.forEach(d => { if (dia[d-1]) chords.push(dia[d-1]); });
+      }
+    });
+  } else {
+    chords = getActiveChords();
+    // Custom mode with no progression — fall back to showing the full diatonic set
+    if (chords.length === 0) chords = diatonicChords(state.key, state.modalKey);
+  }
+
+  // Deduplicate by chord name so the same chord doesn't repeat
   const seen = new Set();
   chords = chords.filter(c => {
     if (!c || seen.has(c.name)) return false;
