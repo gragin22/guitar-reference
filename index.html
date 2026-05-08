@@ -386,19 +386,16 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
 /* ======== CHORD DIAGRAMS ======== */
 .diagrams-row{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));
-  gap:.6rem;
+  display:flex;flex-wrap:wrap;gap:1rem;justify-content:flex-start;
 }
 .diagram-card{
   background:#fff;
   border:1px solid var(--line);
   border-radius:10px;
-  padding:.7rem .5rem;
+  padding:.8rem;
   display:flex;flex-direction:column;align-items:center;gap:.5rem;
-  min-width:0;
+  flex:0 0 auto;
 }
-.diagram-card .diagram-svg{max-width:100%;height:auto}
 .diagram-card .deg-label{
   font-family:'JetBrains Mono',monospace;
   font-size:.65rem;font-weight:600;color:var(--muted);
@@ -1191,8 +1188,8 @@ function renderDiagrams(){
 }
 
 function buildChordSvg(shape, func){
-  const W = 128, H = 130;
-  const padL = 32, padR = 18, padTop = 22;
+  const W = 116, H = 130;
+  const padL = 30, padR = 8, padTop = 22;
   const stringSpacing = (W - padL - padR) / 5;
   const fretSpacing = 18;
   const numFrets = 5;
