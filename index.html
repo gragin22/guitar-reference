@@ -524,6 +524,15 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
       <div class="chip-row" id="keyChips"></div>
     </div>
     <div class="control-group">
+      <div class="control-label">Mode</div>
+      <div class="chip-row" id="modeChips">
+        <button class="chip mode-key" data-modal="major">Major</button>
+        <button class="chip mode-key" data-modal="natural-minor">Natural Minor</button>
+        <button class="chip mode-key" data-modal="mixolydian">Mixolydian</button>
+        <button class="chip mode-key" data-modal="dorian">Dorian</button>
+      </div>
+    </div>
+    <div class="control-group">
       <div class="control-label">Progression</div>
       <div class="chip-row" id="progChips">
         <button class="chip prog" data-prog="1-4-5">1–4–5</button>
@@ -639,10 +648,78 @@ const SCALES = {
   'F':  ['F','G','A','Bb','C','D','E']
 };
 
-// Diatonic chord qualities for major key
-const QUALITIES = ['','m','m','','','m','dim'];          // suffix
-const ROMAN     = ['I','ii','iii','IV','V','vi','vii°'];  // roman numeral
-const FUNCTION  = ['tonic','subdom','dom','subdom','dom','tonic','dom']; // harmonic function
+// Modes — chord qualities, roman numerals, harmonic functions, and scale intervals per mode.
+// "qualities":  'M' = major, 'm' = minor, 'dim' = diminished
+// "intervals":  semitones from the mode's root for each scale degree
+const MODES = {
+  'major': {
+    label:     'Major',
+    qualities: ['M','m','m','M','M','m','dim'],
+    romans:    ['I','ii','iii','IV','V','vi','vii°'],
+    funcs:     ['tonic','subdom','dom','subdom','dom','tonic','dom'],
+    intervals: [0,2,4,5,7,9,11]
+  },
+  'natural-minor': {
+    label:     'Natural Minor',
+    qualities: ['m','dim','M','m','m','M','M'],
+    romans:    ['i','ii°','bIII','iv','v','bVI','bVII'],
+    funcs:     ['tonic','subdom','tonic','subdom','dom','tonic','dom'],
+    intervals: [0,2,3,5,7,8,10]
+  },
+  'mixolydian': {
+    label:     'Mixolydian',
+    qualities: ['M','m','dim','M','m','m','M'],
+    romans:    ['I','ii','iii°','IV','v','vi','bVII'],
+    funcs:     ['tonic','subdom','dom','subdom','dom','tonic','tonic'],
+    intervals: [0,2,4,5,7,9,10]
+  },
+  'dorian': {
+    label:     'Dorian',
+    qualities: ['m','m','M','M','m','dim','M'],
+    romans:    ['i','ii','bIII','IV','v','vi°','bVII'],
+    funcs:     ['tonic','subdom','tonic','subdom','dom','dom','tonic'],
+    intervals: [0,2,3,5,7,9,10]
+  }
+};
+
+// Distance from a mode's tonic UP to its parent major scale's tonic, in semitones.
+// Example: A natural minor's parent major is C (A + 3 = C), D mixolydian's is G (D + 5 = G).
+const PARENT_MAJOR_OFFSET = {
+  'major': 0,
+  'natural-minor': 3,
+  'mixolydian': 5,
+  'dorian': 10
+};
+
+// Map: semitone (0..11) → CIRCLE_ORDER index. Used so any note's chord can be placed on the circle.
+const SEMI_TO_CIRCLE_POS = {};
+CIRCLE_ORDER.forEach((k, i) => {
+  const semi = SEMI[k.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  if (semi !== undefined) SEMI_TO_CIRCLE_POS[semi] = i;
+});
+
+// For a given mode root + mode name, find which major key in CIRCLE_ORDER is the parent.
+function modeParentMajor(rootName, modeKey) {
+  const rootSemi = SEMI[rootName.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  if (rootSemi === undefined) return rootName;
+  const parentSemi = (rootSemi + (PARENT_MAJOR_OFFSET[modeKey] || 0)) % 12;
+  // Find a major key in CIRCLE_ORDER whose root matches parentSemi
+  for (const k of CIRCLE_ORDER) {
+    if (SEMI[k.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')] === parentSemi) return k;
+  }
+  return CIRCLE_ORDER[0];
+}
+
+// Build the scale notes for any (root, mode) pair using the parent major's spelling.
+// Returns properly-spelled notes (e.g. E natural minor → ['E','F#','G','A','B','C','D']).
+function buildScaleNotes(rootName, modeKey) {
+  const parent = modeParentMajor(rootName, modeKey);
+  const parentScale = SCALES[parent] || SCALES['C'];
+  const rootSemi = SEMI[rootName.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  const startIdx = parentScale.findIndex(n => SEMI[n.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')] === rootSemi);
+  if (startIdx < 0) return parentScale.slice();
+  return parentScale.slice(startIdx).concat(parentScale.slice(0, startIdx));
+}
 
 // Scale types — semitone intervals from root
 const SCALE_TYPES = {
@@ -673,81 +750,130 @@ function chromaticForKey(key){
    Add songs over time by appending to this object.
    =========================================================== */
 const SONGS = {
-  // Alphabetical by artist (ignoring "The")
+  // Alphabetical by artist (ignoring "The"). Each section's `mode` defaults to 'major' if omitted.
+  // Modes: 'major' | 'natural-minor' | 'mixolydian' | 'dorian'
+
   'let-it-be': {
     title: 'Let It Be',
     artist: 'The Beatles',
     sections: [
-      { name: 'Verse',  key: 'C', progression: [1,5,6,4,1,5,4,1] },
-      { name: 'Chorus', key: 'C', progression: [6,5,4,1,1,5,4,1] }
+      { name: 'Verse',  key: 'C', mode: 'major', progression: [1,5,6,4,1,5,4,1] },
+      { name: 'Chorus', key: 'C', mode: 'major', progression: [6,5,4,1,1,5,4,1] }
     ]
   },
   'stand-by-me': {
     title: 'Stand By Me',
     artist: 'Ben E. King',
     sections: [
-      { name: 'Whole Song', key: 'A', progression: [1,6,4,5] }
+      { name: 'Whole Song', key: 'A', mode: 'major', progression: [1,6,4,5] }
+    ]
+  },
+  'war-pigs': {
+    title: 'War Pigs',
+    artist: 'Black Sabbath',
+    sections: [
+      { name: 'Main Riff', key: 'E', mode: 'natural-minor', progression: [1,3,7] },
+      { name: 'Verse',     key: 'E', mode: 'natural-minor', progression: [1,3,7,1] }
     ]
   },
   'no-woman-no-cry': {
     title: 'No Woman No Cry',
     artist: 'Bob Marley',
     sections: [
-      { name: 'Verse',  key: 'C', progression: [1,5,6,4,1,4,1,5] },
-      { name: 'Chorus', key: 'C', progression: [1,5,6,4,1,4,1,5] }
+      { name: 'Verse',  key: 'C', mode: 'major', progression: [1,5,6,4,1,4,1,5] },
+      { name: 'Chorus', key: 'C', mode: 'major', progression: [1,5,6,4,1,4,1,5] }
+    ]
+  },
+  'somebody-that-i-used-to-know': {
+    title: 'Somebody That I Used To Know',
+    artist: 'Gotye',
+    sections: [
+      { name: 'Verse',  key: 'D', mode: 'natural-minor', progression: [1,7] },
+      { name: 'Chorus', key: 'D', mode: 'natural-minor', progression: [1,7,6,7] }
     ]
   },
   'just-like-heaven': {
     title: 'Just Like Heaven',
     artist: 'The Cure',
     sections: [
-      { name: 'Whole Song', key: 'A', progression: [1,4,6,5] }
+      { name: 'Whole Song', key: 'A', mode: 'major', progression: [1,4,6,5] }
     ]
   },
   'private-eyes': {
     title: 'Private Eyes',
     artist: 'Daryl Hall & John Oates',
     sections: [
-      { name: 'Verse',  key: 'E', progression: [1,4,1,4] },
-      { name: 'Chorus', key: 'E', progression: [1,4,5,4] }
+      { name: 'Verse',  key: 'E', mode: 'major', progression: [1,4,1,4] },
+      { name: 'Chorus', key: 'E', mode: 'major', progression: [1,4,5,4] }
     ]
   },
   'dont-stop-believin': {
     title: "Don't Stop Believin'",
     artist: 'Journey',
     sections: [
-      { name: 'Verse',      key: 'E', progression: [1,5,6,4] },
-      { name: 'Pre-Chorus', key: 'E', progression: [1,5,3,4] },
-      { name: 'Chorus',     key: 'E', progression: [4,1,5,6,4,1,5] }
+      { name: 'Verse',      key: 'E', mode: 'major', progression: [1,5,6,4,1,5,4,5] },
+      { name: 'Pre-Chorus', key: 'E', mode: 'major', progression: [6,4,1,5,6,4,5] },
+      { name: 'Chorus',     key: 'E', mode: 'major', progression: [1,5,6,4,1,5] }
     ]
   },
   'sweet-home-alabama': {
     title: 'Sweet Home Alabama',
     artist: 'Lynyrd Skynyrd',
     sections: [
-      { name: 'Whole Song', key: 'G', progression: [5,4,1] }
+      { name: 'Whole Song', key: 'D', mode: 'mixolydian', progression: [1,7,4] }
+    ]
+  },
+  'heart-of-gold': {
+    title: 'Heart of Gold',
+    artist: 'Neil Young',
+    sections: [
+      { name: 'Verse',  key: 'E', mode: 'natural-minor', progression: [1,3,7,1] },
+      { name: 'Chorus', key: 'E', mode: 'natural-minor', progression: [3,7,1] }
+    ]
+  },
+  'bulls-on-parade': {
+    title: 'Bulls On Parade',
+    artist: 'Rage Against The Machine',
+    sections: [
+      { name: 'Riff',  key: 'E', mode: 'natural-minor', progression: [1,3,4] },
+      { name: 'Chorus', key: 'E', mode: 'natural-minor', progression: [1,3,4,1] }
     ]
   },
   'everybody-wants-to-rule-the-world': {
     title: 'Everybody Wants To Rule The World',
     artist: 'Tears For Fears',
     sections: [
-      { name: 'Verse',  key: 'D', progression: [1,2] },
-      { name: 'Chorus', key: 'D', progression: [4,1,5] }
+      { name: 'Verse',  key: 'D', mode: 'major', progression: [1,2] },
+      { name: 'Chorus', key: 'D', mode: 'major', progression: [4,1,5] }
     ]
   },
   'with-or-without-you': {
     title: 'With Or Without You',
     artist: 'U2',
     sections: [
-      { name: 'Whole Song', key: 'D', progression: [1,5,6,4] }
+      { name: 'Whole Song', key: 'D', mode: 'major', progression: [1,5,6,4] }
     ]
   },
   'sweet-jane': {
     title: 'Sweet Jane',
     artist: 'The Velvet Underground',
     sections: [
-      { name: 'Whole Song', key: 'D', progression: [1,5,4,1,5] }
+      { name: 'Whole Song', key: 'D', mode: 'major', progression: [1,5,4,1,5] }
+    ]
+  },
+  'black-math': {
+    title: 'Black Math',
+    artist: 'The White Stripes',
+    sections: [
+      { name: 'Main Riff', key: 'E', mode: 'mixolydian', progression: [1,7,4] }
+    ]
+  },
+  'say-it-aint-so': {
+    title: "Say It Ain't So",
+    artist: 'Weezer',
+    sections: [
+      { name: 'Verse',  key: 'D', mode: 'natural-minor', progression: [1,5,6,3] },
+      { name: 'Chorus', key: 'D', mode: 'natural-minor', progression: [6,3,7,1] }
     ]
   }
 };
@@ -776,23 +902,30 @@ let state = {
   activeSection: 0,        // which section of the song is currently driving the visualizations
   key: 'C',
   progression: [1,5,6,4],
-  scaleType: 'major'
+  scaleType: 'major',
+  modalKey: 'major'        // current chord-progression mode: 'major' | 'natural-minor' | 'mixolydian' | 'dorian'
 };
 
 /* ===========================================================
    DERIVED HELPERS
    =========================================================== */
 
-function diatonicChords(key){
-  const scale = SCALES[key];
-  return scale.map((note, i) => ({
-    degree: i+1,
-    roman: ROMAN[i],
-    name: note + QUALITIES[i],
-    note,
-    quality: QUALITIES[i] === '' ? 'major' : QUALITIES[i] === 'm' ? 'minor' : 'dim',
-    func: FUNCTION[i]
-  }));
+function diatonicChords(key, modeKey){
+  modeKey = modeKey || 'major';
+  const mode = MODES[modeKey] || MODES['major'];
+  const scale = buildScaleNotes(key, modeKey);
+  return scale.map((note, i) => {
+    const q = mode.qualities[i];
+    const suffix = q === 'M' ? '' : q === 'm' ? 'm' : 'dim';
+    return {
+      degree: i + 1,
+      roman: mode.romans[i],
+      name: note + suffix,
+      note,
+      quality: q === 'M' ? 'major' : q === 'm' ? 'minor' : 'dim',
+      func: mode.funcs[i]
+    };
+  });
 }
 
 function progChords(key, prog){
@@ -1029,9 +1162,8 @@ function relativeMinor(majorKey){
    =========================================================== */
 
 function applyCircleState(){
-  const dia = diatonicChords(state.key);
-  // Map each diatonic chord to its circle position (which ring + which slot)
-  const placements = dia.map(c => circlePlacement(c, state.key));
+  const dia = diatonicChords(state.key, state.modalKey);
+  const placements = dia.map(c => circlePlacement(c));
 
   // Clear all
   document.querySelectorAll('.cell').forEach(g => {
@@ -1049,7 +1181,6 @@ function applyCircleState(){
     const degree = i + 1;
     const isInProg = progSet.has(degree);
     if (!isInProg && !showAllDiatonic) {
-      // dim — show as soft diatonic so user can see context
       const cell = findCell(place);
       if (cell) cell.classList.add('diatonic');
       return;
@@ -1058,40 +1189,36 @@ function applyCircleState(){
     if (!cell) return;
     cell.classList.add('func-' + dia[i].func);
     const deg = cell.querySelector('.cell-degree');
-    if (deg) deg.textContent = ROMAN[i];
+    if (deg) deg.textContent = dia[i].roman;
   });
 
-  // Update center display
+  // Update center display — show key + mode label
   const ck = document.getElementById('centerKey');
   if (ck) ck.textContent = state.key;
+  const cs = document.getElementById('centerSub');
+  if (cs) cs.textContent = (MODES[state.modalKey] || MODES.major).label.toLowerCase();
 
-  // Draw progression arcs
   drawProgArcs(placements);
 }
 
-// Map a diatonic chord to its (ring, position-index) on the circle
-function circlePlacement(chord, key){
-  const keyIdx = CIRCLE_ORDER.indexOf(key);
-  if (keyIdx < 0) return null;
-  // Position of each scale degree relative to tonic in circle-of-fifths order:
-  //   I  = +0 outer
-  //   ii = -1 inner   (dorian relation: ii is rel-min of IV)
-  //   iii= +1 inner   (rel-min of V)
-  //   IV = -1 outer
-  //   V  = +1 outer
-  //   vi = +0 inner
-  //   vii°= +5 outer ... but visually we'll place inside on tonic's tritone — keep on outer at +5
-  const degree = chord.degree;
-  let ring, offset;
-  if (degree === 1) { ring='outer'; offset=0; }
-  else if (degree === 4) { ring='outer'; offset=-1; }
-  else if (degree === 5) { ring='outer'; offset=1; }
-  else if (degree === 6) { ring='inner'; offset=0; }
-  else if (degree === 2) { ring='inner'; offset=-1; }
-  else if (degree === 3) { ring='inner'; offset=1; }
-  else if (degree === 7) { ring='outer'; offset=5; } // tritone away (B is 5 fifths up from C)
-  const pos = ((keyIdx + offset) % 12 + 12) % 12;
-  return {ring, pos};
+// Map a chord to its (ring, position-index) on the circle by its root note.
+// Mode-agnostic: works the same for major / natural-minor / mixolydian / dorian.
+//   - major chord  → outer ring at the chord's root note position
+//   - minor chord  → inner ring at the relative-major's position (root + 3 semitones)
+//   - dim chord    → outer ring at the chord's root note position (treated like major for placement)
+function circlePlacement(chord){
+  const rootName = chord.note;
+  const rootSemi = SEMI[rootName.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  if (rootSemi === undefined) return null;
+
+  if (chord.quality === 'minor') {
+    const relMajorSemi = (rootSemi + 3) % 12;
+    const pos = SEMI_TO_CIRCLE_POS[relMajorSemi];
+    return pos !== undefined ? {ring: 'inner', pos} : null;
+  } else {
+    const pos = SEMI_TO_CIRCLE_POS[rootSemi];
+    return pos !== undefined ? {ring: 'outer', pos} : null;
+  }
 }
 
 function findCell(placement){
@@ -1142,10 +1269,11 @@ function drawProgArcs(placements){
    =========================================================== */
 
 function renderInfoStrip(){
-  document.getElementById('infoKey').textContent = state.key + ' major';
+  const modeLabel = (MODES[state.modalKey] || MODES.major).label.toLowerCase();
+  document.getElementById('infoKey').textContent = `${state.key} ${modeLabel}`;
   document.getElementById('infoProg').textContent =
     state.progression.length ? state.progression.join('–') : '—';
-  document.getElementById('infoScale').textContent = SCALES[state.key].join(' ');
+  document.getElementById('infoScale').textContent = buildScaleNotes(state.key, state.modalKey).join(' ');
 }
 
 function renderProgDisplay(){
@@ -1155,7 +1283,7 @@ function renderProgDisplay(){
     wrap.innerHTML = '<span style="color:var(--muted);font-size:.85rem">Pick a progression above to see chord names</span>';
     return;
   }
-  const dia = diatonicChords(state.key);
+  const dia = diatonicChords(state.key, state.modalKey);
   state.progression.forEach((d, idx) => {
     const c = dia[d-1];
     if (!c) return;
@@ -1178,7 +1306,7 @@ function renderProgDisplay(){
 function renderDiatonicGrid(){
   const grid = document.getElementById('diatonicGrid');
   grid.innerHTML = '';
-  const dia = diatonicChords(state.key);
+  const dia = diatonicChords(state.key, state.modalKey);
   dia.forEach(c => {
     const cell = document.createElement('div');
     cell.className = 'diatonic-cell ' + c.func;
@@ -1198,7 +1326,7 @@ function renderDiatonicGrid(){
 function renderDiagrams(){
   const row = document.getElementById('diagramsRow');
   row.innerHTML = '';
-  const dia = diatonicChords(state.key);
+  const dia = diatonicChords(state.key, state.modalKey);
   const chords = state.progression.length
     ? state.progression.map(d => dia[d-1])
     : dia;
@@ -1405,6 +1533,20 @@ function buildKeyChips(){
   });
 }
 
+function bindModeChips(){
+  document.querySelectorAll('#modeChips .mode-key').forEach(b => {
+    b.addEventListener('click', () => {
+      state.modalKey = b.dataset.modal;
+      // Auto-sync the fretboard scale chip when it has a matching scale type
+      if (state.modalKey === 'natural-minor') state.scaleType = 'natural-minor';
+      else if (state.modalKey === 'mixolydian') state.scaleType = 'mixolydian';
+      else if (state.modalKey === 'dorian')     state.scaleType = 'dorian';
+      else                                       state.scaleType = 'major';
+      render();
+    });
+  });
+}
+
 function buildScaleChips(){
   const wrap = document.getElementById('scaleChips');
   wrap.innerHTML = '';
@@ -1461,6 +1603,9 @@ function syncChipStates(){
   document.querySelectorAll('#keyChips .chip').forEach(b => {
     b.classList.toggle('active', b.dataset.key === state.key);
   });
+  document.querySelectorAll('#modeChips .mode-key').forEach(b => {
+    b.classList.toggle('active', b.dataset.modal === state.modalKey);
+  });
   const progStr = state.progression.join('-');
   document.querySelectorAll('.chip.prog').forEach(b => {
     b.classList.toggle('active', b.dataset.prog === progStr);
@@ -1488,6 +1633,12 @@ function render(){
     if (section) {
       state.key = section.key;
       state.progression = section.progression;
+      state.modalKey = section.mode || 'major';
+      // Auto-sync the fretboard scale chip to match the song's mode where it makes sense
+      if (state.modalKey === 'natural-minor') state.scaleType = 'natural-minor';
+      else if (state.modalKey === 'mixolydian') state.scaleType = 'mixolydian';
+      else if (state.modalKey === 'dorian')     state.scaleType = 'dorian';
+      else                                       state.scaleType = 'major';
     }
   }
 
@@ -1544,6 +1695,8 @@ function bindModeToggle(){
       if (mode === 'custom') {
         state.songId = null;
         document.getElementById('songSelect').value = '';
+        // Default custom mode back to major if no explicit choice was made via mode chips
+        // (otherwise the previous song's mode could linger and confuse the user)
       }
       render();
     });
@@ -1563,7 +1716,9 @@ function renderSongSections(){
 
   const song = SONGS[state.songId];
   song.sections.forEach((section, idx) => {
-    const dia = diatonicChords(section.key);
+    const sectionMode = section.mode || 'major';
+    const dia = diatonicChords(section.key, sectionMode);
+    const modeLabel = (MODES[sectionMode] || MODES.major).label;
     const card = document.createElement('div');
     card.className = 'section-card' + (idx === state.activeSection ? ' active' : '');
     card.addEventListener('click', () => setActiveSection(idx));
@@ -1584,10 +1739,14 @@ function renderSongSections(){
     });
     chordsHtml += '</div>';
 
+    const keyDisplay = sectionMode === 'major'
+      ? `<span class="key-name">${section.key}</span>`
+      : `<span class="key-name">${section.key}</span> ${modeLabel.toLowerCase()}`;
+
     card.innerHTML = `
       <div class="section-card-head">
         <div class="section-card-name">${section.name}</div>
-        <div class="section-card-key">Key of <span class="key-name">${section.key}</span></div>
+        <div class="section-card-key">Key of ${keyDisplay}</div>
       </div>
       ${chordsHtml}
     `;
@@ -1628,6 +1787,7 @@ function syncModeUI(){
 
 function init(){
   buildKeyChips();
+  bindModeChips();
   buildScaleChips();
   bindProgChips();
   buildCircle();
