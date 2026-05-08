@@ -420,6 +420,45 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 }
 .diagram-svg{display:block}
 
+/* ======== LYRICS PANEL ======== */
+.lyrics-panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.25rem;
+  margin-top:2rem;
+}
+.lyrics-section-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;font-weight:600;letter-spacing:.1em;
+  color:var(--accent);
+  margin-left:.5rem;
+}
+.lyrics-content{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:.88rem;line-height:1.7;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:1rem 1.1rem;
+  white-space:pre;
+  overflow-x:auto;
+  color:var(--text);
+}
+.lyrics-line{display:block;min-height:1.7em}
+.lyrics-line.chord{color:var(--accent);font-weight:700}
+.lyrics-line.lyric{color:var(--text);font-weight:400}
+.lyrics-line.section-marker{
+  color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.1em;
+  font-size:.75rem;margin-top:.6rem;
+}
+.lyrics-empty{
+  color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:.85rem;font-style:italic;text-align:center;
+  padding:1.5rem;
+}
+
 /* ======== FRETBOARD ======== */
 .fretboard-wrap{
   background:var(--panel);
@@ -629,6 +668,14 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
         <div class="diagrams-row" id="diagramsRow"></div>
       </div>
     </div>
+  </div>
+
+  <!-- LYRICS (song mode, active section) -->
+  <div class="lyrics-panel" id="lyricsPanel" style="display:none">
+    <div class="panel-title">
+      Lyrics &amp; Chords <span class="lyrics-section-tag" id="lyricsSectionTag"></span>
+    </div>
+    <div id="lyricsContent"></div>
   </div>
 
   <!-- FRETBOARD -->
@@ -1803,6 +1850,7 @@ function render(){
   renderDiagrams();
   renderFretboard();
   renderSongSections();
+  renderLyrics();
   syncChipStates();
   syncModeUI();
 }
@@ -1860,6 +1908,61 @@ function bindModeToggle(){
 function setActiveSection(idx){
   state.activeSection = idx;
   render();
+}
+
+// Detect whether a line is "chord-only" (chord tokens separated by spaces).
+// Matches tokens like: A, F#m, Bb/D, Cmaj7, F#m7b5, Dsus4, A7, G#dim
+function isChordLine(line){
+  const tokens = line.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return false;
+  const tok = /^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9b#]*(?:\/[A-G][#b]?)?$/i;
+  return tokens.every(t => tok.test(t));
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderLyrics(){
+  const panel = document.getElementById('lyricsPanel');
+  const content = document.getElementById('lyricsContent');
+  const tag = document.getElementById('lyricsSectionTag');
+  if (!panel || !content) return;
+
+  // Only show in song mode with a song loaded
+  if (state.mode !== 'song' || !state.songId || !SONGS[state.songId]) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  const song = SONGS[state.songId];
+
+  // Collect all sections that have lyrics so the user sees the whole song laid out
+  const sectionsWithLyrics = song.sections.filter(s => s.lyrics && s.lyrics.trim());
+  if (sectionsWithLyrics.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = '';
+  if (tag) tag.textContent = '';  // not needed when showing full song
+
+  let html = '';
+  song.sections.forEach(section => {
+    if (!section.lyrics || !section.lyrics.trim()) return;
+    html += `<div class="lyrics-line section-marker">[ ${escapeHtml(section.name)} ]</div>`;
+    html += '<div class="lyrics-content">';
+    section.lyrics.split('\n').forEach(line => {
+      if (line.trim() === '') {
+        html += '<span class="lyrics-line">&nbsp;</span>';
+        return;
+      }
+      const cls = isChordLine(line) ? 'chord' : 'lyric';
+      html += `<span class="lyrics-line ${cls}">${escapeHtml(line)}</span>`;
+    });
+    html += '</div>';
+  });
+  content.innerHTML = html;
 }
 
 function renderSongSections(){
