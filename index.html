@@ -1026,9 +1026,9 @@ function renderDiagrams(){
 }
 
 function buildChordSvg(shape, func){
-  const W = 110, H = 130;
-  const padX = 16, padTop = 22;
-  const stringSpacing = (W - padX*2) / 5;
+  const W = 128, H = 130;
+  const padL = 32, padR = 18, padTop = 22;
+  const stringSpacing = (W - padL - padR) / 5;
   const fretSpacing = 18;
   const numFrets = 5;
   const frets = shape.frets;
@@ -1036,7 +1036,6 @@ function buildChordSvg(shape, func){
 
   // If barreFret > 0, we shift the fretboard view to start at barreFret
   // and show a fret-number indicator.
-  const showStartFret = barreFret > 0 ? barreFret : 1;
   const isShifted = barreFret > 0;
 
   const colorMap = {
@@ -1046,26 +1045,26 @@ function buildChordSvg(shape, func){
     'default':'#1d2330'
   };
   const dotColor = colorMap[func] || colorMap.default;
-  const textOnDot = func === 'tonic' ? '#3a2a08' : '#fff';
 
   let svg = `<svg class="diagram-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
 
   // Nut (only if not shifted)
   if (!isShifted) {
-    svg += `<rect x="${padX}" y="${padTop-3}" width="${W - padX*2}" height="3" fill="#1d2330"/>`;
+    svg += `<rect x="${padL}" y="${padTop-3}" width="${W - padL - padR}" height="3" fill="#1d2330"/>`;
   } else {
-    // Fret number indicator
-    svg += `<text x="${padX - 4}" y="${padTop + 13}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#6b7280">${barreFret}fr</text>`;
+    // Fret number indicator — aligned with the first visible fret row
+    const labelY = padTop + (1 - 0.5) * fretSpacing + 4;
+    svg += `<text x="${padL - 6}" y="${labelY}" text-anchor="end" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#1d2330">${barreFret}fr</text>`;
   }
 
   // Frets (horizontal lines)
   for (let f = 0; f <= numFrets; f++) {
     const y = padTop + f * fretSpacing;
-    svg += `<line x1="${padX}" y1="${y}" x2="${W - padX}" y2="${y}" stroke="#cdc8b9" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#cdc8b9" stroke-width="1"/>`;
   }
   // Strings (vertical lines)
   for (let s = 0; s < 6; s++) {
-    const x = padX + s * stringSpacing;
+    const x = padL + s * stringSpacing;
     svg += `<line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + numFrets * fretSpacing}" stroke="#cdc8b9" stroke-width="1"/>`;
   }
 
@@ -1080,8 +1079,8 @@ function buildChordSvg(shape, func){
       }
     }
     if (count >= 3 && firstS !== -1 && lastS !== firstS) {
-      const x1 = padX + firstS * stringSpacing;
-      const x2 = padX + lastS * stringSpacing;
+      const x1 = padL + firstS * stringSpacing;
+      const x2 = padL + lastS * stringSpacing;
       const y  = padTop + (1 - 0.5) * fretSpacing;
       svg += `<rect x="${x1 - 6}" y="${y - 4}" width="${x2 - x1 + 12}" height="8" rx="4" fill="${dotColor}" opacity="0.85"/>`;
     }
@@ -1089,7 +1088,7 @@ function buildChordSvg(shape, func){
 
   // Dots, opens, mutes
   for (let s = 0; s < 6; s++) {
-    const x = padX + s * stringSpacing;
+    const x = padL + s * stringSpacing;
     const f = frets[s];
     if (f === -1) {
       svg += `<text x="${x}" y="${padTop - 7}" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#6b7280">×</text>`;
