@@ -338,6 +338,25 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
   margin-top:2rem;
   overflow-x:auto;
 }
+.fretboard-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem}
+.scale-heading{
+  color:var(--accent);font-weight:600;
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.05em;
+  margin-left:.4rem;
+}
+.scale-chips{
+  display:flex;flex-wrap:wrap;gap:.4rem;
+  margin-bottom:1.1rem;align-items:center;
+}
+.scale-chips .group-label{
+  font-size:.6rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+  padding-right:.35rem;border-left:1px solid var(--line);padding-left:.7rem;
+  align-self:stretch;display:flex;align-items:center;
+}
+.scale-chips .group-label:first-child{border-left:none;padding-left:0}
+.scale-chips .chip{font-size:.78rem;padding:.45rem .7rem;font-family:'Inter',sans-serif;letter-spacing:0;font-weight:500}
+.scale-chips .chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .fretboard-svg{display:block;min-width:680px}
 
 /* ======== INFO STRIP ======== */
@@ -480,7 +499,10 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
   <!-- FRETBOARD -->
   <div class="fretboard-wrap">
-    <div class="circle-title" style="margin-bottom:1rem">Major Scale on Fretboard</div>
+    <div class="fretboard-head">
+      <div class="circle-title" style="margin-bottom:0">Scale on Fretboard <span id="scaleHeading" class="scale-heading">— C Major</span></div>
+    </div>
+    <div class="scale-chips" id="scaleChips"></div>
     <svg class="fretboard-svg" viewBox="0 0 720 200" id="fretboardSvg"></svg>
   </div>
 
@@ -519,6 +541,27 @@ const QUALITIES = ['','m','m','','','m','dim'];          // suffix
 const ROMAN     = ['I','ii','iii','IV','V','vi','vii°'];  // roman numeral
 const FUNCTION  = ['tonic','subdom','dom','subdom','dom','tonic','dom']; // harmonic function
 
+// Scale types — semitone intervals from root
+const SCALE_TYPES = {
+  'major':            {name:'Major',            group:'core',  intervals:[0,2,4,5,7,9,11]},
+  'natural-minor':    {name:'Natural Minor',    group:'core',  intervals:[0,2,3,5,7,8,10]},
+  'major-pentatonic': {name:'Major Pentatonic', group:'core',  intervals:[0,2,4,7,9]},
+  'minor-pentatonic': {name:'Minor Pentatonic', group:'core',  intervals:[0,3,5,7,10]},
+  'dorian':           {name:'Dorian',           group:'mode',  intervals:[0,2,3,5,7,9,10]},
+  'mixolydian':       {name:'Mixolydian',       group:'mode',  intervals:[0,2,4,5,7,9,10]},
+  'blues':            {name:'Blues',            group:'color', intervals:[0,3,5,6,7,10]},
+  'harmonic-minor':   {name:'Harmonic Minor',   group:'color', intervals:[0,2,3,5,7,8,11]}
+};
+const SCALE_ORDER = ['minor-pentatonic','major-pentatonic','major','natural-minor','dorian','mixolydian','blues','harmonic-minor'];
+
+// Flat-preferred keys (use Bb instead of A#, etc.)
+const FLAT_KEYS = ['F','Bb','Eb','Ab','Db'];
+const CHROMATIC_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const CHROMATIC_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+function chromaticForKey(key){
+  return FLAT_KEYS.includes(key) ? CHROMATIC_FLAT : CHROMATIC_SHARP;
+}
+
 // Note → semitone (chromatic, 0=C)
 const SEMI = {
   'C':0,'B#':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,
@@ -539,7 +582,8 @@ function normalizeChord(name){
 
 let state = {
   key: 'C',
-  progression: [1,5,6,4]
+  progression: [1,5,6,4],
+  scaleType: 'major'
 };
 
 /* ===========================================================
@@ -1084,9 +1128,10 @@ function renderFretboard(){
   const fretW = (W - padL - padR) / fretsToShow;
   const stringSpacing = (H - padT - padB) / 5;
 
-  const scale = SCALES[state.key];
-  const scaleSemis = scale.map(n => SEMI[n.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')]);
   const rootSemi = SEMI[state.key.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  const scaleDef = SCALE_TYPES[state.scaleType] || SCALE_TYPES['major'];
+  const scaleSemis = scaleDef.intervals.map(i => (rootSemi + i) % 12);
+  const chromatic = chromaticForKey(state.key);
 
   let s = '';
 
@@ -1137,7 +1182,7 @@ function renderFretboard(){
       if (scaleSemis.includes(noteSemi)) {
         const isRoot = noteSemi === rootSemi;
         const cx = f === 0 ? padL - 6 : padL + (f - 0.5) * fretW;
-        const noteName = CHROMATIC[noteSemi];
+        const noteName = chromatic[noteSemi];
         const color = isRoot ? '#e0a020' : '#2563eb';
         const txtColor = isRoot ? '#3a2a08' : '#fff';
         const r = isRoot ? 11 : 9;
@@ -1164,6 +1209,30 @@ function buildKeyChips(){
     b.dataset.key = k;
     b.textContent = k;
     b.addEventListener('click', () => { state.key = k; render(); });
+    wrap.appendChild(b);
+  });
+}
+
+function buildScaleChips(){
+  const wrap = document.getElementById('scaleChips');
+  wrap.innerHTML = '';
+  let lastGroup = null;
+  const groupLabels = {core:'Essential', mode:'Modes', color:'Color'};
+
+  SCALE_ORDER.forEach(id => {
+    const def = SCALE_TYPES[id];
+    if (def.group !== lastGroup) {
+      const lbl = document.createElement('span');
+      lbl.className = 'group-label';
+      lbl.textContent = groupLabels[def.group];
+      wrap.appendChild(lbl);
+      lastGroup = def.group;
+    }
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.dataset.scale = id;
+    b.textContent = def.name;
+    b.addEventListener('click', () => { state.scaleType = id; render(); });
     wrap.appendChild(b);
   });
 }
@@ -1204,6 +1273,14 @@ function syncChipStates(){
   document.querySelectorAll('.chip.prog').forEach(b => {
     b.classList.toggle('active', b.dataset.prog === progStr);
   });
+  document.querySelectorAll('#scaleChips .chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.scale === state.scaleType);
+  });
+  const heading = document.getElementById('scaleHeading');
+  if (heading) {
+    const def = SCALE_TYPES[state.scaleType];
+    heading.textContent = `— ${state.key} ${def ? def.name : 'Major'}`;
+  }
 }
 
 /* ===========================================================
@@ -1222,6 +1299,7 @@ function render(){
 
 function init(){
   buildKeyChips();
+  buildScaleChips();
   bindProgChips();
   buildCircle();
   render();
