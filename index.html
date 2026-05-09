@@ -81,87 +81,6 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 /* ======== CONTAINER ======== */
 .container{max-width:1280px;margin:0 auto;padding:2rem 1.5rem 4rem}
 
-/* ======== MODE BAR ======== */
-.mode-bar{
-  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
-  margin-bottom:1.5rem;
-}
-.mode-toggle{
-  display:inline-flex;background:var(--panel);
-  border:1px solid var(--line);border-radius:10px;padding:4px;
-  box-shadow:0 1px 2px rgba(29,35,48,.04);
-}
-.mode-btn{
-  font:inherit;padding:.55rem 1.1rem;border:none;background:transparent;
-  color:var(--muted);cursor:pointer;border-radius:7px;
-  font-size:.85rem;font-weight:500;transition:all .15s ease;
-  letter-spacing:.01em;
-}
-.mode-btn:hover{color:var(--text)}
-.mode-btn.active{
-  background:var(--accent);color:#fff;
-  box-shadow:0 1px 3px rgba(194,134,12,.3);
-}
-.song-select{
-  padding:.6rem .9rem;background:var(--panel);
-  border:1px solid var(--line);border-radius:10px;
-  font-size:.9rem;font-family:inherit;color:var(--text);
-  min-width:240px;cursor:pointer;outline:none;
-  transition:border-color .15s ease;
-}
-.song-select:hover{border-color:var(--line-2)}
-.song-select:focus{border-color:var(--accent)}
-.song-info{
-  display:flex;flex-direction:column;
-  padding:.4rem .9rem;border-left:2px solid var(--accent);
-}
-.song-info-title{
-  font-size:1rem;font-weight:600;color:var(--text);
-  letter-spacing:-.005em;
-}
-.song-info-artist{
-  font-size:.75rem;color:var(--muted);
-  letter-spacing:.05em;margin-top:.1rem;
-}
-
-/* ======== SECTION CARDS (song mode) ======== */
-.section-card{
-  background:#fff;border:1px solid var(--line);border-radius:12px;
-  padding:1rem;margin-bottom:.7rem;cursor:pointer;
-  transition:all .15s ease;
-}
-.section-card:hover{border-color:var(--line-2);transform:translateY(-1px);box-shadow:0 2px 6px rgba(29,35,48,.06)}
-.section-card.active{
-  border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(194,134,12,.18),0 2px 8px rgba(29,35,48,.08);
-}
-.section-card-head{
-  display:flex;justify-content:space-between;align-items:baseline;
-  margin-bottom:.7rem;padding-bottom:.5rem;
-  border-bottom:1px dashed var(--line);
-}
-.section-card-name{
-  font-size:.7rem;font-weight:700;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--text);
-}
-.section-card.active .section-card-name{color:var(--accent)}
-.section-card-key{
-  font-size:.7rem;color:var(--muted);letter-spacing:.05em;
-}
-.section-card-key .key-name{
-  font-family:'JetBrains Mono',monospace;
-  color:var(--accent);font-weight:700;
-}
-.section-card .prog-display{
-  gap:.4rem;
-}
-.section-card .prog-step{
-  padding:.5rem .65rem;min-width:54px;
-}
-.section-card .prog-step .chord{font-size:.95rem}
-.section-card .prog-step .deg{font-size:.6rem}
-.section-card .prog-arrow{font-size:.85rem}
-
 /* ======== CONTROLS ======== */
 .controls{
   background:var(--panel);
@@ -420,43 +339,115 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 }
 .diagram-svg{display:block}
 
-/* ======== LYRICS PANEL ======== */
-.lyrics-panel{
+/* ======== CHORD LOOKUP ======== */
+.lookup-wrap{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:14px;
-  padding:1.25rem;
+  padding:1.5rem;
   margin-top:2rem;
 }
-.lyrics-section-tag{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.7rem;font-weight:600;letter-spacing:.1em;
-  color:var(--accent);
-  margin-left:.5rem;
+.lookup-head{margin-bottom:1.1rem}
+.lookup-sub{
+  font-size:.8rem;color:var(--muted);
+  margin-top:.3rem;letter-spacing:0;
 }
-.lyrics-content{
-  font-family:'JetBrains Mono',ui-monospace,monospace;
-  font-size:.88rem;line-height:1.7;
+.lookup-controls .control-group{margin-bottom:1rem}
+.lookup-controls .control-group:last-child{margin-bottom:0}
+.lookup-controls .chip.lookup-type{
+  font-family:'Inter',sans-serif;font-size:.78rem;
+  letter-spacing:0;font-weight:500;padding:.45rem .7rem;
+}
+
+.lookup-result{
+  margin-top:1.4rem;padding:1.25rem;
   background:var(--panel-2);
   border:1px solid var(--line);
-  border-radius:10px;
-  padding:1rem 1.1rem;
-  white-space:pre;
-  overflow-x:auto;
-  color:var(--text);
+  border-radius:12px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.25rem;
 }
-.lyrics-line{display:block;min-height:1.7em}
-.lyrics-line.chord{color:var(--accent);font-weight:700}
-.lyrics-line.lyric{color:var(--text);font-weight:400}
-.lyrics-line.section-marker{
-  color:var(--muted);font-weight:600;
-  text-transform:uppercase;letter-spacing:.1em;
-  font-size:.75rem;margin-top:.6rem;
+@media(min-width:760px){
+  .lookup-result{grid-template-columns:1.4fr 1fr;align-items:start}
 }
-.lyrics-empty{
-  color:var(--muted);font-family:'Inter',sans-serif;
-  font-size:.85rem;font-style:italic;text-align:center;
-  padding:1.5rem;
+.result-info .result-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:2rem;font-weight:700;letter-spacing:-.01em;
+  color:var(--accent);margin-bottom:.2rem;
+}
+.result-info .result-type{
+  font-size:.85rem;color:var(--muted);
+  letter-spacing:.05em;text-transform:uppercase;font-weight:600;
+  margin-bottom:1rem;
+}
+.result-stats{
+  display:flex;flex-direction:column;gap:.85rem;
+  margin-bottom:1rem;
+}
+.result-stat{
+  display:flex;flex-direction:column;gap:.2rem;
+}
+.result-stat .label{
+  font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;
+}
+.result-stat .value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1rem;font-weight:600;color:var(--text);
+  letter-spacing:.05em;
+}
+.result-desc{
+  font-size:.9rem;line-height:1.55;color:var(--text);
+  padding:.75rem .9rem;background:#fff;
+  border-left:3px solid var(--accent);border-radius:6px;
+}
+.result-diagram{
+  display:flex;justify-content:center;align-items:center;
+}
+.result-diagram .diagram-card{
+  background:#fff;
+  width:auto;
+}
+
+/* ======== LOOKUP TABLE ======== */
+.lookup-reference{
+  margin-top:1.5rem;
+  border-top:1px dashed var(--line);
+  padding-top:1rem;
+}
+.lookup-reference summary{
+  font-size:.8rem;font-weight:600;color:var(--muted);
+  letter-spacing:.05em;cursor:pointer;
+  list-style:none;padding:.4rem 0;
+  user-select:none;
+}
+.lookup-reference summary::before{content:'▸ ';color:var(--accent);font-weight:700}
+.lookup-reference[open] summary::before{content:'▾ '}
+.lookup-table{
+  margin-top:.8rem;
+  display:grid;grid-template-columns:1fr;gap:.4rem;
+  font-size:.85rem;
+}
+@media(min-width:760px){
+  .lookup-table{grid-template-columns:1fr 1fr}
+}
+.lookup-row{
+  display:grid;grid-template-columns:80px 130px 1fr;
+  gap:.7rem;align-items:center;
+  padding:.5rem .7rem;
+  background:var(--panel-2);border-radius:6px;
+  border:1px solid var(--line);
+}
+.lookup-row .lk-suffix{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;color:var(--accent);
+}
+.lookup-row .lk-formula{
+  font-family:'JetBrains Mono',monospace;
+  color:var(--text);font-size:.8rem;
+}
+.lookup-row .lk-desc{
+  color:var(--muted);font-size:.78rem;line-height:1.4;
 }
 
 /* ======== FRETBOARD ======== */
@@ -563,22 +554,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
 <div class="container">
 
-  <!-- MODE BAR -->
-  <div class="mode-bar">
-    <div class="mode-toggle" role="tablist">
-      <button class="mode-btn" data-mode="song" role="tab">Select a Song</button>
-      <button class="mode-btn active" data-mode="custom" role="tab">Custom</button>
-    </div>
-    <select class="song-select" id="songSelect" style="display:none">
-      <option value="">— Pick a song —</option>
-    </select>
-    <div class="song-info" id="songInfo" style="display:none">
-      <span class="song-info-title" id="songInfoTitle"></span>
-      <span class="song-info-artist" id="songInfoArtist"></span>
-    </div>
-  </div>
-
-  <!-- CONTROLS (custom mode only) -->
+  <!-- CONTROLS -->
   <div class="controls" id="controlsPanel">
     <div class="control-group">
       <div class="control-label">Key</div>
@@ -646,16 +622,9 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
     <!-- RIGHT: Progression + Diatonic -->
     <div class="side-col">
-      <!-- Custom mode: single progression -->
       <div class="panel" id="progPanel">
         <div class="panel-title">Progression in Key</div>
         <div class="prog-display" id="progDisplay"></div>
-      </div>
-
-      <!-- Song mode: multiple sections -->
-      <div class="panel" id="sectionsPanel" style="display:none">
-        <div class="panel-title">Song Sections</div>
-        <div id="sectionsList"></div>
       </div>
 
       <div class="panel">
@@ -670,12 +639,30 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
     </div>
   </div>
 
-  <!-- LYRICS (song mode, active section) -->
-  <div class="lyrics-panel" id="lyricsPanel" style="display:none">
-    <div class="panel-title">
-      Lyrics &amp; Chords <span class="lyrics-section-tag" id="lyricsSectionTag"></span>
+  <!-- CHORD LOOKUP -->
+  <div class="lookup-wrap">
+    <div class="lookup-head">
+      <div class="circle-title" style="margin-bottom:0">Chord Lookup</div>
+      <div class="lookup-sub">Pick a root + a chord type to see what it means and how to play it.</div>
     </div>
-    <div id="lyricsContent"></div>
+
+    <div class="lookup-controls">
+      <div class="control-group">
+        <div class="control-label">Root</div>
+        <div class="chip-row" id="lookupRootChips"></div>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Chord Type</div>
+        <div class="chip-row" id="lookupTypeChips"></div>
+      </div>
+    </div>
+
+    <div class="lookup-result" id="lookupResult"></div>
+
+    <details class="lookup-reference">
+      <summary>All chord types — formulas at a glance</summary>
+      <div class="lookup-table" id="lookupTable"></div>
+    </details>
   </div>
 
   <!-- FRETBOARD -->
@@ -689,9 +676,6 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 
   <div class="footer-note">
     <div><span class="accent">I ii iii IV V vi vii°</span> &nbsp;·&nbsp; Major minor minor Major Major minor diminished</div>
-    <div class="footer-theory">
-      Some songs use a chord that sits outside the chosen mode — a "borrowed chord" (e.g. a major V in a minor-key song). It's a normal pop/rock practice, not a mistake. Borrowed chords show with a <span class="footer-borrowed-chip">dashed outline</span> and no Roman numeral. The chord name is what to play.
-    </div>
   </div>
 
 </div>
@@ -829,190 +813,43 @@ function chromaticForKey(key){
 }
 
 /* ===========================================================
-   SONGS DATABASE
-   Each song has 1+ sections. Each section: { name, key, progression }
-   - key: a major key (one of CIRCLE_ORDER)
-   - progression: array of scale degrees (1..7)
-   Add songs over time by appending to this object.
+   CHORD TYPES — formula + interval breakdown for the lookup
    =========================================================== */
-const SONGS = {
-  // Alphabetical by artist (ignoring "The"). Each section's `mode` defaults to 'major' if omitted.
-  // Modes: 'major' | 'natural-minor' | 'mixolydian' | 'dorian'
-
-  'let-it-be': {
-    title: 'Let It Be',
-    artist: 'The Beatles',
-    sections: [
-      { name: 'Verse',  key: 'C', mode: 'major', progression: [1,5,6,4,1,5,4,1] },
-      { name: 'Chorus', key: 'C', mode: 'major', progression: [6,5,4,1,1,5,4,1] }
-    ]
-  },
-  'stand-by-me': {
-    title: 'Stand By Me',
-    artist: 'Ben E. King',
-    sections: [
-      { name: 'Whole Song', key: 'A', mode: 'major', progression: [1,6,4,5] }
-    ]
-  },
-  'war-pigs': {
-    title: 'War Pigs',
-    artist: 'Black Sabbath',
-    sections: [
-      { name: 'Main Riff', key: 'E', mode: 'natural-minor', progression: [1,3,7] },
-      { name: 'Verse',     key: 'E', mode: 'natural-minor', progression: [1,3,7,1] }
-    ]
-  },
-  'no-woman-no-cry': {
-    title: 'No Woman No Cry',
-    artist: 'Bob Marley',
-    sections: [
-      { name: 'Verse',  key: 'C', mode: 'major', progression: [1,5,6,4,1,4,1,5] },
-      { name: 'Chorus', key: 'C', mode: 'major', progression: [1,5,6,4,1,4,1,5] }
-    ]
-  },
-  'somebody-that-i-used-to-know': {
-    title: 'Somebody That I Used To Know',
-    artist: 'Gotye',
-    sections: [
-      { name: 'Verse',  key: 'D', mode: 'natural-minor', progression: [1,7] },
-      { name: 'Chorus', key: 'D', mode: 'natural-minor', progression: [1,7,6,7] }
-    ]
-  },
-  'just-like-heaven': {
-    title: 'Just Like Heaven',
-    artist: 'The Cure',
-    sections: [
-      { name: 'Whole Song', key: 'A', mode: 'major', progression: [1,4,6,5] }
-    ]
-  },
-  'private-eyes': {
-    title: 'Private Eyes',
-    artist: 'Daryl Hall & John Oates',
-    sections: [
-      { name: 'Verse',  key: 'E', mode: 'major', progression: [1,4,1,4] },
-      { name: 'Chorus', key: 'E', mode: 'major', progression: [1,4,5,4] }
-    ]
-  },
-  'dont-stop-believin': {
-    title: "Don't Stop Believin'",
-    artist: 'Journey',
-    sections: [
-      { name: 'Verse',      key: 'E', mode: 'major', progression: [1,5,6,4,1,5,4,5] },
-      { name: 'Pre-Chorus', key: 'E', mode: 'major', progression: [6,4,1,5,6,4,5] },
-      { name: 'Chorus',     key: 'E', mode: 'major', progression: [1,5,6,4,1,5] }
-    ]
-  },
-  'sweet-home-alabama': {
-    title: 'Sweet Home Alabama',
-    artist: 'Lynyrd Skynyrd',
-    sections: [
-      { name: 'Whole Song', key: 'D', mode: 'mixolydian', progression: [1,7,4] }
-    ]
-  },
-  'heart-of-gold': {
-    title: 'Heart of Gold',
-    artist: 'Neil Young',
-    sections: [
-      { name: 'Verse',  key: 'E', mode: 'natural-minor', progression: [1,3,7,1] },
-      { name: 'Chorus', key: 'E', mode: 'natural-minor', progression: [3,7,1] }
-    ]
-  },
-  'bulls-on-parade': {
-    title: 'Bulls On Parade',
-    artist: 'Rage Against The Machine',
-    sections: [
-      { name: 'Riff',  key: 'E', mode: 'natural-minor', progression: [1,3,4] },
-      { name: 'Chorus', key: 'E', mode: 'natural-minor', progression: [1,3,4,1] }
-    ]
-  },
-  'you-only-live-once': {
-    title: 'You Only Live Once',
-    artist: 'The Strokes',
-    // Tabbed in E major. F# (II) and D#m (vii) are borrowed from outside the major scale.
-    sections: [
-      {
-        name: 'Verse',
-        key: 'E',
-        mode: 'major',
-        chords: ['E','B','F#'],
-        lyrics: ``
-      },
-      {
-        name: 'Pre-Chorus',
-        key: 'E',
-        mode: 'major',
-        chords: ['C#m','E','G#m','F#','B','D#m','F#','E'],
-        lyrics: ``
-      },
-      {
-        name: 'Chorus',
-        key: 'E',
-        mode: 'major',
-        chords: ['C#m','E','G#m','F#','B','D#m','F#','E'],
-        lyrics: ``
-      },
-      {
-        name: 'Outro',
-        key: 'E',
-        mode: 'major',
-        chords: ['B'],
-        lyrics: ``
-      }
-    ]
-  },
-  'everybody-wants-to-rule-the-world': {
-    title: 'Everybody Wants To Rule The World',
-    artist: 'Tears For Fears',
-    sections: [
-      { name: 'Verse',  key: 'D', mode: 'major', progression: [1,2] },
-      { name: 'Chorus', key: 'D', mode: 'major', progression: [4,1,5] }
-    ]
-  },
-  'with-or-without-you': {
-    title: 'With Or Without You',
-    artist: 'U2',
-    sections: [
-      { name: 'Whole Song', key: 'D', mode: 'major', progression: [1,5,6,4] }
-    ]
-  },
-  'sweet-jane': {
-    title: 'Sweet Jane',
-    artist: 'The Velvet Underground',
-    sections: [
-      { name: 'Whole Song', key: 'D', mode: 'major', progression: [1,5,4,1,5] }
-    ]
-  },
-  'black-math': {
-    title: 'Black Math',
-    artist: 'The White Stripes',
-    sections: [
-      { name: 'Main Riff', key: 'E', mode: 'mixolydian', progression: [1,7,4] }
-    ]
-  },
-  'say-it-aint-so': {
-    title: "Say It Ain't So",
-    artist: 'Weezer',
-    sections: [
-      // Original recording is in C minor. Uses a major V (G) which is borrowed from harmonic minor.
-      { name: 'Intro Riff', key: 'C', mode: 'natural-minor', chords: ['Cm','Ab','Eb','Bb'] },
-      { name: 'Verse',      key: 'C', mode: 'natural-minor', chords: ['Cm','G','Cm','Ab','Eb','Bb'] },
-      { name: 'Chorus',     key: 'C', mode: 'natural-minor', chords: ['F','Cm','Bb','Ab','Eb','G'] }
-    ]
-  }
+const CHORD_TYPES_ORDER = [
+  'maj','m','7','maj7','m7','m7b5','dim','dim7',
+  'sus2','sus4','add9','6','m6','9','maj9','aug'
+];
+const CHORD_TYPES = {
+  'maj':   { suffix:'',     label:'Major',           formula:[0,4,7],         intervals:'1 - 3 - 5',         desc:'Major triad. The default "happy"/stable sound.' },
+  'm':     { suffix:'m',    label:'Minor',           formula:[0,3,7],         intervals:'1 - b3 - 5',        desc:'Minor triad. Darker/sadder than major.' },
+  '7':     { suffix:'7',    label:'Dominant 7',      formula:[0,4,7,10],      intervals:'1 - 3 - 5 - b7',    desc:'Major triad + flat 7. Bluesy, restless — wants to resolve up a 4th.' },
+  'maj7':  { suffix:'maj7', label:'Major 7',         formula:[0,4,7,11],      intervals:'1 - 3 - 5 - 7',     desc:'Major triad + natural 7. Jazzy, dreamy, lush.' },
+  'm7':    { suffix:'m7',   label:'Minor 7',         formula:[0,3,7,10],      intervals:'1 - b3 - 5 - b7',   desc:'Minor triad + flat 7. Smoother and more open than plain minor.' },
+  'm7b5':  { suffix:'m7b5', label:'Half Diminished', formula:[0,3,6,10],      intervals:'1 - b3 - b5 - b7',  desc:'Diminished triad + flat 7 (also written ø). Common as ii in minor key jazz.' },
+  'dim':   { suffix:'dim',  label:'Diminished',      formula:[0,3,6],         intervals:'1 - b3 - b5',       desc:'Two stacked minor 3rds. Tense, unstable, leads somewhere.' },
+  'dim7':  { suffix:'dim7', label:'Diminished 7',    formula:[0,3,6,9],       intervals:'1 - b3 - b5 - bb7', desc:'Stacked minor 3rds all the way through. Symmetrical — every inversion is itself.' },
+  'sus2':  { suffix:'sus2', label:'Suspended 2',     formula:[0,2,7],         intervals:'1 - 2 - 5',         desc:'Major triad with the 3rd replaced by the 2nd. Open, ambiguous (neither major nor minor).' },
+  'sus4':  { suffix:'sus4', label:'Suspended 4',     formula:[0,5,7],         intervals:'1 - 4 - 5',         desc:'3rd replaced by the 4th. Wants to resolve down to the major triad.' },
+  'add9':  { suffix:'add9', label:'Add 9',           formula:[0,4,7,14],      intervals:'1 - 3 - 5 - 9',     desc:'Major triad + 9th (with NO 7th — that\'s what distinguishes it from a 9 chord). Bright, sparkly.' },
+  '6':     { suffix:'6',    label:'Major 6',         formula:[0,4,7,9],       intervals:'1 - 3 - 5 - 6',     desc:'Major triad + 6th. Lighter and airier than maj7. Common in swing and old-school pop.' },
+  'm6':    { suffix:'m6',   label:'Minor 6',         formula:[0,3,7,9],       intervals:'1 - b3 - 5 - 6',    desc:'Minor triad + natural 6. Bittersweet, jazzy.' },
+  '9':     { suffix:'9',    label:'Dominant 9',      formula:[0,4,7,10,14],   intervals:'1 - 3 - 5 - b7 - 9',desc:'Dom7 with the 9th stacked on top. Funky and soulful.' },
+  'maj9':  { suffix:'maj9', label:'Major 9',         formula:[0,4,7,11,14],   intervals:'1 - 3 - 5 - 7 - 9', desc:'Major 7 + 9th. The lush jazz "dream chord".' },
+  'aug':   { suffix:'aug',  label:'Augmented',       formula:[0,4,8],         intervals:'1 - 3 - #5',        desc:'Major triad with raised 5th. Eerie, suspended-feeling — common in old soul intros.' }
 };
 
 /* ===========================================================
    STATE
    =========================================================== */
 
+
 let state = {
-  mode: 'custom',          // 'custom' | 'song'
-  songId: null,            // selected song ID when mode === 'song'
-  activeSection: 0,        // which section of the song is currently driving the visualizations
   key: 'C',
   progression: [1,5,6,4],
   scaleType: 'major',
-  modalKey: 'major'        // current chord-progression mode: 'major' | 'natural-minor' | 'mixolydian' | 'dorian'
+  modalKey: 'major',         // 'major' | 'natural-minor' | 'mixolydian' | 'dorian'
+  lookupRoot: 'C',
+  lookupType: 'maj7'
 };
 
 /* ===========================================================
@@ -1092,23 +929,7 @@ function resolveChord(chordName, key, modeKey) {
 }
 
 // Single source of truth for the currently-active chord list.
-// Handles both literal `chords:` arrays and degree-based `progression:` arrays.
 function getActiveChords() {
-  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
-    const song = SONGS[state.songId];
-    const section = song.sections[state.activeSection] || song.sections[0];
-    if (!section) return [];
-    const sectionMode = section.mode || 'major';
-    if (section.chords && section.chords.length) {
-      return section.chords.map(name => resolveChord(name, section.key, sectionMode));
-    }
-    if (section.progression && section.progression.length) {
-      const dia = diatonicChords(section.key, sectionMode);
-      return section.progression.map(d => dia[d-1]).filter(Boolean);
-    }
-    return [];
-  }
-  // Custom mode
   const dia = diatonicChords(state.key, state.modalKey);
   return state.progression.map(d => dia[d-1]).filter(Boolean);
 }
@@ -1135,17 +956,91 @@ const CHORD_LIB = {
   'Am':  {frets:[-1,0,2,2,1,0]},
   'Dm':  {frets:[-1,-1,0,2,3,1]},
   'Em':  {frets:[0,2,2,0,0,0]},
+  // Open 7
+  'A7':  {frets:[-1,0,2,0,2,0]},
+  'B7':  {frets:[-1,2,1,2,0,2]},
+  'C7':  {frets:[-1,3,2,3,1,0]},
+  'D7':  {frets:[-1,-1,0,2,1,2]},
+  'E7':  {frets:[0,2,0,1,0,0]},
+  'G7':  {frets:[3,2,0,0,0,1]},
+  // Open m7
+  'Am7': {frets:[-1,0,2,0,1,0]},
+  'Dm7': {frets:[-1,-1,0,2,1,1]},
+  'Em7': {frets:[0,2,2,0,3,0]},
+  // Open maj7
+  'Cmaj7':{frets:[-1,3,2,0,0,0]},
+  'Dmaj7':{frets:[-1,-1,0,2,2,2]},
+  'Emaj7':{frets:[0,2,1,1,0,0]},
+  'Fmaj7':{frets:[-1,-1,3,2,1,0]},
+  'Gmaj7':{frets:[3,2,0,0,0,2]},
+  'Amaj7':{frets:[-1,0,2,1,2,0]},
+  // Open sus
+  'Asus2':{frets:[-1,0,2,2,0,0]},
+  'Asus4':{frets:[-1,0,2,2,3,0]},
+  'Dsus2':{frets:[-1,-1,0,2,3,0]},
+  'Dsus4':{frets:[-1,-1,0,2,3,3]},
+  'Esus4':{frets:[0,2,2,2,0,0]},
+  // Open add9
+  'Cadd9':{frets:[-1,3,2,0,3,0]},
+  'Gadd9':{frets:[3,2,0,2,3,3]},
+  // Open 6
+  'C6':  {frets:[-1,3,2,2,1,0]},
+  'A6':  {frets:[-1,0,2,2,2,2]},
+  'E6':  {frets:[0,2,2,1,2,0]},
+  'G6':  {frets:[3,2,0,0,0,0]},
+  // Open m6
+  'Am6': {frets:[-1,0,2,2,1,2]},
+  'Em6': {frets:[0,2,2,0,2,0]},
+  // Open 9
+  'A9':  {frets:[-1,0,2,4,2,3]},
+  'E9':  {frets:[0,2,0,1,0,2]},
+  // Open maj9
+  'Cmaj9':{frets:[-1,3,2,4,3,0]},
+  'Amaj9':{frets:[-1,0,2,1,0,0]},
+  // Open aug
+  'Eaug':{frets:[0,3,2,1,1,0]}
 };
 
-// Barre shape templates (relative offsets from barre fret on the named string)
+// Barre shape templates (relative offsets from barre fret on the named string).
 // E-shape: root on 6th string. A-shape: root on 5th string.
 const SHAPES = {
-  E_major: [0,2,2,1,0,0],
-  E_minor: [0,2,2,0,0,0],
-  E_dim:   [0,1,2,0,-1,-1],
-  A_major: [-1,0,2,2,2,0],
-  A_minor: [-1,0,2,2,1,0],
-  A_dim:   [-1,0,1,2,1,-1]
+  // Triads
+  E_maj:  [0,2,2,1,0,0],
+  E_m:    [0,2,2,0,0,0],
+  E_dim:  [0,1,2,0,-1,-1],
+  E_aug:  [0,3,2,1,1,0],
+  A_maj:  [-1,0,2,2,2,0],
+  A_m:    [-1,0,2,2,1,0],
+  A_dim:  [-1,0,1,2,1,-1],
+  A_aug:  [-1,0,3,2,2,1],
+  // Sevenths
+  E_7:    [0,2,0,1,0,0],
+  E_m7:   [0,2,0,0,0,0],
+  E_maj7: [0,2,1,1,0,0],
+  E_m7b5: [0,1,2,0,3,-1],
+  E_dim7: [-1,1,2,0,2,-1],
+  A_7:    [-1,0,2,0,2,0],
+  A_m7:   [-1,0,2,0,1,0],
+  A_maj7: [-1,0,2,1,2,0],
+  A_m7b5: [-1,0,1,2,1,-1],
+  A_dim7: [-1,0,1,2,1,2],
+  // Sus
+  E_sus2: [0,2,4,4,0,2],
+  E_sus4: [0,2,2,2,0,0],
+  A_sus2: [-1,0,2,2,0,0],
+  A_sus4: [-1,0,2,2,3,0],
+  // 6 / m6 / add9
+  E_6:    [0,2,2,1,2,0],
+  E_m6:   [0,2,2,0,2,0],
+  E_add9: [0,2,2,1,0,2],
+  A_6:    [-1,0,2,2,2,2],
+  A_m6:   [-1,0,2,2,1,2],
+  A_add9: [-1,0,2,4,2,0],
+  // 9 / maj9
+  E_9:    [0,2,0,1,0,2],
+  E_maj9: [0,2,1,1,0,2],
+  A_9:    [-1,0,2,4,2,3],
+  A_maj9: [-1,0,2,1,0,0]
 };
 
 // Find barre fret for a root on a given open-string note
@@ -1154,17 +1049,28 @@ function semitonesUp(rootSemi, openSemi){
   return ((rootSemi - openSemi) + 12) % 12;
 }
 
-function buildBarre(rootName, qualityKey){
+// Translate the legacy quality words ('major' / 'minor') to the SHAPES key prefix.
+function _shapeKey(qualityOrTypeKey) {
+  if (qualityOrTypeKey === 'major') return 'maj';
+  if (qualityOrTypeKey === 'minor') return 'm';
+  return qualityOrTypeKey || 'maj';
+}
+
+function buildBarre(rootName, typeKey){
   const rootSemi = SEMI[rootName];
   if (rootSemi === undefined) return null;
+  const sk = _shapeKey(typeKey);
 
-  const eFret = semitonesUp(rootSemi, SEMI['E']); // 0..11
-  const aFret = semitonesUp(rootSemi, SEMI['A']); // 0..11
+  const eFret = semitonesUp(rootSemi, SEMI['E']);
+  const aFret = semitonesUp(rootSemi, SEMI['A']);
 
-  // Pick the shape that sits at the lower fret (more playable, lower on neck).
-  // Allows fret 0 (no barre) for cases like E° where the unbarred shape is the natural fingering.
+  const eTmpl = SHAPES['E_' + sk];
+  const aTmpl = SHAPES['A_' + sk];
+  if (!eTmpl && !aTmpl) return null;
+
+  // Pick whichever shape is available at the lower fret position
   let useShape, baseFret;
-  if (eFret <= aFret) {
+  if (eTmpl && (!aTmpl || eFret <= aFret)) {
     useShape = 'E';
     baseFret = eFret;
   } else {
@@ -1172,23 +1078,24 @@ function buildBarre(rootName, qualityKey){
     baseFret = aFret;
   }
 
-  const tmpl = SHAPES[useShape + '_' + qualityKey];
-  if (!tmpl) return null;
-
+  const tmpl = SHAPES[useShape + '_' + sk];
   const frets = tmpl.map(f => f === -1 ? -1 : f + baseFret);
   return {frets, barreFret: baseFret, shape: useShape};
 }
 
-function getChordShape(chordName, qualityKey){
+function getChordShape(chordName, typeKey){
   const norm = normalizeChord(chordName);
   if (CHORD_LIB[norm]) return Object.assign({barreFret:0}, CHORD_LIB[norm]);
 
-  // Reduce to the underlying triad name (strip 7, sus, add9, etc.)
+  // For triads, fall back to checking the underlying triad name
   const root = chordRoot(norm);
-  const baseTriad = qualityKey === 'minor' ? root + 'm' : root;
-  if (CHORD_LIB[baseTriad]) return Object.assign({barreFret:0}, CHORD_LIB[baseTriad]);
+  const sk = _shapeKey(typeKey);
+  if (sk === 'maj' || sk === 'm' || sk === 'dim') {
+    const baseTriad = sk === 'm' ? root + 'm' : (sk === 'dim' ? root + 'dim' : root);
+    if (CHORD_LIB[baseTriad]) return Object.assign({barreFret:0}, CHORD_LIB[baseTriad]);
+  }
 
-  const barre = buildBarre(root, qualityKey);
+  const barre = buildBarre(root, sk);
   if (barre) return barre;
   return null;
 }
@@ -1528,26 +1435,9 @@ function renderDiagrams(){
   const row = document.getElementById('diagramsRow');
   row.innerHTML = '';
 
-  let chords;
-  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
-    // Song mode: show every chord across every section so the user has all the
-    // shapes they need to play the whole song
-    const song = SONGS[state.songId];
-    chords = [];
-    song.sections.forEach(section => {
-      const sectionMode = section.mode || 'major';
-      if (section.chords && section.chords.length) {
-        section.chords.forEach(name => chords.push(resolveChord(name, section.key, sectionMode)));
-      } else if (section.progression && section.progression.length) {
-        const dia = diatonicChords(section.key, sectionMode);
-        section.progression.forEach(d => { if (dia[d-1]) chords.push(dia[d-1]); });
-      }
-    });
-  } else {
-    chords = getActiveChords();
-    // Custom mode with no progression — fall back to showing the full diatonic set
-    if (chords.length === 0) chords = diatonicChords(state.key, state.modalKey);
-  }
+  let chords = getActiveChords();
+  // Fall back to the full diatonic set if no progression is selected
+  if (chords.length === 0) chords = diatonicChords(state.key, state.modalKey);
 
   // Deduplicate by chord name so the same chord doesn't repeat
   const seen = new Set();
@@ -1841,6 +1731,12 @@ function syncChipStates(){
   document.querySelectorAll('#scaleChips .chip').forEach(b => {
     b.classList.toggle('active', b.dataset.scale === state.scaleType);
   });
+  document.querySelectorAll('#lookupRootChips .chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.root === state.lookupRoot);
+  });
+  document.querySelectorAll('#lookupTypeChips .chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === state.lookupType);
+  });
   const heading = document.getElementById('scaleHeading');
   if (heading) {
     const def = SCALE_TYPES[state.scaleType];
@@ -1849,233 +1745,121 @@ function syncChipStates(){
 }
 
 /* ===========================================================
+   CHORD LOOKUP
+   =========================================================== */
+
+// Compute proper note names for a (root, formula) pair.
+// Uses sharp/flat preference based on the root key.
+function spellChord(root, formula) {
+  const rootSemi = SEMI[root.replace('E#','F').replace('B#','C').replace('Cb','B').replace('Fb','E')];
+  if (rootSemi === undefined) return [];
+  const chromatic = chromaticForKey(root);
+  return formula.map(i => chromatic[((rootSemi + i) % 12 + 12) % 12]);
+}
+
+const LOOKUP_ROOTS = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+function buildLookupRootChips() {
+  const wrap = document.getElementById('lookupRootChips');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  LOOKUP_ROOTS.forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.dataset.root = r;
+    b.textContent = r;
+    b.addEventListener('click', () => { state.lookupRoot = r; render(); });
+    wrap.appendChild(b);
+  });
+}
+
+function buildLookupTypeChips() {
+  const wrap = document.getElementById('lookupTypeChips');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  CHORD_TYPES_ORDER.forEach(t => {
+    const def = CHORD_TYPES[t];
+    const b = document.createElement('button');
+    b.className = 'chip lookup-type';
+    b.dataset.type = t;
+    b.textContent = def.label + (def.suffix ? `  (${def.suffix})` : '');
+    b.addEventListener('click', () => { state.lookupType = t; render(); });
+    wrap.appendChild(b);
+  });
+}
+
+function buildLookupTable() {
+  const tbl = document.getElementById('lookupTable');
+  if (!tbl) return;
+  tbl.innerHTML = '';
+  CHORD_TYPES_ORDER.forEach(t => {
+    const def = CHORD_TYPES[t];
+    const row = document.createElement('div');
+    row.className = 'lookup-row';
+    row.innerHTML = `
+      <div class="lk-suffix">${def.suffix || '(maj)'}</div>
+      <div class="lk-formula">${def.intervals}</div>
+      <div class="lk-desc">${def.desc}</div>
+    `;
+    tbl.appendChild(row);
+  });
+}
+
+function renderChordLookup() {
+  const result = document.getElementById('lookupResult');
+  if (!result) return;
+
+  const root = state.lookupRoot || 'C';
+  const typeKey = state.lookupType || 'maj';
+  const def = CHORD_TYPES[typeKey];
+  if (!def) { result.innerHTML = ''; return; }
+
+  const chordName = root + def.suffix;
+  const notes = spellChord(root, def.formula);
+  const shape = getChordShape(chordName, typeKey);
+  const diagramSvg = shape ? buildChordSvg(shape, 'tonic') : '<div style="font-size:.8rem;color:var(--muted)">No diagram available for this voicing</div>';
+
+  result.innerHTML = `
+    <div class="result-info">
+      <div class="result-title">${chordName}</div>
+      <div class="result-type">${def.label}</div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <div class="label">Notes</div>
+          <div class="value">${notes.join(' – ')}</div>
+        </div>
+        <div class="result-stat">
+          <div class="label">Formula</div>
+          <div class="value">${def.intervals}</div>
+        </div>
+      </div>
+      <div class="result-desc">${def.desc}</div>
+    </div>
+    <div class="result-diagram">
+      <div class="diagram-card tonic">
+        <div class="deg-label">Voicing</div>
+        <div class="name-label">${chordName}</div>
+        ${diagramSvg}
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================
    RENDER PIPELINE
    =========================================================== */
 
 function render(){
-  // In song mode, mirror the active section's key + progression into state
-  // so all the existing render functions work transparently.
-  if (state.mode === 'song' && state.songId && SONGS[state.songId]) {
-    const song = SONGS[state.songId];
-    const section = song.sections[state.activeSection] || song.sections[0];
-    if (section) {
-      state.key = section.key;
-      state.progression = section.progression || [];
-      state.modalKey = section.mode || 'major';
-      // Auto-sync the fretboard scale chip to match the song's mode where it makes sense
-      if (state.modalKey === 'natural-minor') state.scaleType = 'natural-minor';
-      else if (state.modalKey === 'mixolydian') state.scaleType = 'mixolydian';
-      else if (state.modalKey === 'dorian')     state.scaleType = 'dorian';
-      else                                       state.scaleType = 'major';
-    }
-  }
-
   applyCircleState();
   renderInfoStrip();
   renderProgDisplay();
   renderDiatonicGrid();
   renderDiagrams();
   renderFretboard();
-  renderSongSections();
-  renderLyrics();
+  renderChordLookup();
   syncChipStates();
-  syncModeUI();
 }
 
-/* ===========================================================
-   SONG MODE — UI logic
-   =========================================================== */
-
-function buildSongDropdown(){
-  const sel = document.getElementById('songSelect');
-  // Wipe and rebuild so adding songs to SONGS auto-populates
-  sel.innerHTML = '<option value="">— Pick a song —</option>';
-  const sortKey = name => (name || '').replace(/^The\s+/i, '').toLowerCase();
-  const ids = Object.keys(SONGS).sort((a, b) => {
-    const ka = sortKey(SONGS[a].artist), kb = sortKey(SONGS[b].artist);
-    if (ka !== kb) return ka.localeCompare(kb);
-    return SONGS[a].title.localeCompare(SONGS[b].title);
-  });
-  ids.forEach(id => {
-    const s = SONGS[id];
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = `${s.artist} — ${s.title}`;
-    sel.appendChild(opt);
-  });
-  sel.addEventListener('change', e => {
-    const id = e.target.value;
-    if (id && SONGS[id]) {
-      state.songId = id;
-      state.activeSection = 0;
-      render();
-    } else {
-      state.songId = null;
-      render();
-    }
-  });
-}
-
-function bindModeToggle(){
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode;
-      state.mode = mode;
-      if (mode === 'custom') {
-        state.songId = null;
-        document.getElementById('songSelect').value = '';
-        // Default custom mode back to major if no explicit choice was made via mode chips
-        // (otherwise the previous song's mode could linger and confuse the user)
-      }
-      render();
-    });
-  });
-}
-
-function setActiveSection(idx){
-  state.activeSection = idx;
-  render();
-}
-
-// Detect whether a line is "chord-only" (chord tokens separated by spaces).
-// Matches tokens like: A, F#m, Bb/D, Cmaj7, F#m7b5, Dsus4, A7, G#dim
-function isChordLine(line){
-  const tokens = line.trim().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return false;
-  // Standard chord tokens, plus N.C. (no chord) and trailing * (voicing variant)
-  const tok = /^(N\.C\.|[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9b#]*(?:\/[A-G][#b]?)?\*?)$/i;
-  return tokens.every(t => tok.test(t));
-}
-
-function escapeHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderLyrics(){
-  const panel = document.getElementById('lyricsPanel');
-  const content = document.getElementById('lyricsContent');
-  const tag = document.getElementById('lyricsSectionTag');
-  if (!panel || !content) return;
-
-  // Only show in song mode with a song loaded
-  if (state.mode !== 'song' || !state.songId || !SONGS[state.songId]) {
-    panel.style.display = 'none';
-    return;
-  }
-
-  const song = SONGS[state.songId];
-
-  // Collect all sections that have lyrics so the user sees the whole song laid out
-  const sectionsWithLyrics = song.sections.filter(s => s.lyrics && s.lyrics.trim());
-  if (sectionsWithLyrics.length === 0) {
-    panel.style.display = 'none';
-    return;
-  }
-
-  panel.style.display = '';
-  if (tag) tag.textContent = '';  // not needed when showing full song
-
-  let html = '';
-  song.sections.forEach(section => {
-    if (!section.lyrics || !section.lyrics.trim()) return;
-    html += `<div class="lyrics-line section-marker">[ ${escapeHtml(section.name)} ]</div>`;
-    html += '<div class="lyrics-content">';
-    section.lyrics.split('\n').forEach(line => {
-      if (line.trim() === '') {
-        html += '<span class="lyrics-line">&nbsp;</span>';
-        return;
-      }
-      const cls = isChordLine(line) ? 'chord' : 'lyric';
-      html += `<span class="lyrics-line ${cls}">${escapeHtml(line)}</span>`;
-    });
-    html += '</div>';
-  });
-  content.innerHTML = html;
-}
-
-function renderSongSections(){
-  const list = document.getElementById('sectionsList');
-  if (!list) return;
-  list.innerHTML = '';
-  if (state.mode !== 'song' || !state.songId || !SONGS[state.songId]) return;
-
-  const song = SONGS[state.songId];
-  song.sections.forEach((section, idx) => {
-    const sectionMode = section.mode || 'major';
-    const modeLabel = (MODES[sectionMode] || MODES.major).label;
-    const card = document.createElement('div');
-    card.className = 'section-card' + (idx === state.activeSection ? ' active' : '');
-    card.addEventListener('click', () => setActiveSection(idx));
-
-    // Build the section's chord list (literal chords or derived from progression)
-    let sectionChords;
-    if (section.chords && section.chords.length) {
-      sectionChords = section.chords.map(name => resolveChord(name, section.key, sectionMode));
-    } else {
-      const dia = diatonicChords(section.key, sectionMode);
-      sectionChords = (section.progression || []).map(d => dia[d-1]).filter(Boolean);
-    }
-
-    let chordsHtml = '<div class="prog-display">';
-    sectionChords.forEach((c, i) => {
-      if (!c) return;
-      chordsHtml += `
-        <div class="prog-step ${c.func || 'tonic'}">
-          <div class="deg">${c.roman || '·'}</div>
-          <div class="chord">${c.name}</div>
-        </div>
-      `;
-      if (i < sectionChords.length - 1) {
-        chordsHtml += `<span class="prog-arrow">→</span>`;
-      }
-    });
-    chordsHtml += '</div>';
-
-    const keyDisplay = sectionMode === 'major'
-      ? `<span class="key-name">${section.key}</span>`
-      : `<span class="key-name">${section.key}</span> ${modeLabel.toLowerCase()}`;
-
-    card.innerHTML = `
-      <div class="section-card-head">
-        <div class="section-card-name">${section.name}</div>
-        <div class="section-card-key">Key of ${keyDisplay}</div>
-      </div>
-      ${chordsHtml}
-    `;
-    list.appendChild(card);
-  });
-}
-
-function syncModeUI(){
-  const isSong = state.mode === 'song';
-  const songLoaded = isSong && state.songId && SONGS[state.songId];
-
-  // Mode buttons
-  document.querySelectorAll('.mode-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.mode === state.mode);
-  });
-
-  // Song dropdown visible only in song mode
-  document.getElementById('songSelect').style.display = isSong ? '' : 'none';
-
-  // Song info card shown when a song is loaded
-  const songInfo = document.getElementById('songInfo');
-  if (songLoaded) {
-    const song = SONGS[state.songId];
-    songInfo.style.display = '';
-    document.getElementById('songInfoTitle').textContent = song.title;
-    document.getElementById('songInfoArtist').textContent = song.artist;
-  } else {
-    songInfo.style.display = 'none';
-  }
-
-  // Custom controls: hidden when a song is loaded; visible in custom mode OR in song mode before a song is picked
-  document.getElementById('controlsPanel').style.display = songLoaded ? 'none' : '';
-
-  // Progression panel (custom) vs Sections panel (song)
-  document.getElementById('progPanel').style.display = songLoaded ? 'none' : '';
-  document.getElementById('sectionsPanel').style.display = songLoaded ? '' : 'none';
-}
 
 function init(){
   buildKeyChips();
@@ -2083,8 +1867,9 @@ function init(){
   buildScaleChips();
   bindProgChips();
   buildCircle();
-  buildSongDropdown();
-  bindModeToggle();
+  buildLookupRootChips();
+  buildLookupTypeChips();
+  buildLookupTable();
   render();
 }
 
