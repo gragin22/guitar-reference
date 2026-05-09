@@ -928,9 +928,36 @@ const SONGS = {
   'you-only-live-once': {
     title: 'You Only Live Once',
     artist: 'The Strokes',
+    // Tabbed in E major. F# (II) and D#m (vii) are borrowed from outside the major scale.
     sections: [
-      { name: 'Verse',  key: 'A', mode: 'major', progression: [1,5,6,3] },
-      { name: 'Chorus', key: 'A', mode: 'major', progression: [1,5,6,3] }
+      {
+        name: 'Verse',
+        key: 'E',
+        mode: 'major',
+        chords: ['E','B','F#'],
+        lyrics: ``
+      },
+      {
+        name: 'Pre-Chorus',
+        key: 'E',
+        mode: 'major',
+        chords: ['C#m','E','G#m','F#','B','D#m','F#','E'],
+        lyrics: ``
+      },
+      {
+        name: 'Chorus',
+        key: 'E',
+        mode: 'major',
+        chords: ['C#m','E','G#m','F#','B','D#m','F#','E'],
+        lyrics: ``
+      },
+      {
+        name: 'Outro',
+        key: 'E',
+        mode: 'major',
+        chords: ['B'],
+        lyrics: ``
+      }
     ]
   },
   'everybody-wants-to-rule-the-world': {
@@ -1915,7 +1942,8 @@ function setActiveSection(idx){
 function isChordLine(line){
   const tokens = line.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return false;
-  const tok = /^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9b#]*(?:\/[A-G][#b]?)?$/i;
+  // Standard chord tokens, plus N.C. (no chord) and trailing * (voicing variant)
+  const tok = /^(N\.C\.|[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9b#]*(?:\/[A-G][#b]?)?\*?)$/i;
   return tokens.every(t => tok.test(t));
 }
 
